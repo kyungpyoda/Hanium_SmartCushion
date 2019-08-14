@@ -20,10 +20,10 @@ client.on('message', function (topic, message) {
 	console.log(topic + ' ' + message);
 });
 
-/*
+/**
 var testSampling = function() {
 	setInterval(function() {
 		client.publish('topic1', 'data');
 	}, 500);
 }
-*/
+**/
