@@ -10,11 +10,13 @@ int S3  = 2;
 
 int SIG_pin = A3;
 
+int LED_pin = 8;
 int sensorNum[35]={
   10,12,14,98,16,18,20,99,
   5,6,7,8,9,11,13,15,17,19,21,22,23,24,25,99,
   0,1,2,3,4,98,26,27,28,29,30
-};
+}; 
+int tempArr[31] = {0,};
 
 
 void setup() {
@@ -27,10 +29,12 @@ void setup() {
   pinMode(S2, OUTPUT);
   pinMode(S3, OUTPUT);
 
+  pinMode(LED_pin,OUTPUT);
 }
 
 void loop() {
-  for (int i=0; i<32; i++){
+  int j = 0;
+  for (int i=0; i<35; i++){
     if(sensorNum[i]==98){
       Serial.print("  ");
     }else if(sensorNum[i]==99){
@@ -39,13 +43,16 @@ void loop() {
       Serial.print("[");
       Serial.print(readMux(sensorNum[i]));
       Serial.print("]");
+      tempArr[++j] = readMux(sensorNum[i]);
     }
     delay(1);
   }
   Serial.println("");
   Serial.println("========================================================");
   Serial.println("");
+  digitalWrite(LED_pin,LOW);
   delay(500);
+  digitalWrite(LED_pin,HIGH);
 }
 
 
@@ -97,4 +104,13 @@ int readMux(int channel) {
 
   //return the value
   return val;
+}
+
+int verticalBal(int Arr[31]) {
+  int l1=0;
+  int 12=0;
+  int l3=0;
+  for(int i=0;i<31;i++) {
+    if()
+  }
 }
