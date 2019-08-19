@@ -16,8 +16,16 @@ int sensorNum[35]={
   5,6,7,8,9,11,13,15,17,19,21,22,23,24,25,99,
   0,1,2,3,4,98,26,27,28,29,30
 }; 
-int tempArr[31] = {0,};
 
+int tempArr[31];
+int avgArr[6]; //{tl,tr,ml,mr,bl,br}
+
+int tl[3];
+int tr[3];
+int ml[8];
+int mr[8];
+int bl[5];
+int br[5];
 
 void setup() {
   Serial.begin(115200);
@@ -34,25 +42,66 @@ void setup() {
 
 void loop() {
   int j = 0;
+  int max1 = 0;
+  int max2 = 1;
+  int sensor = 0;
+  initial();
+  
   for (int i=0; i<35; i++){
+    sensor = 0;
     if(sensorNum[i]==98){
       Serial.print("  ");
     }else if(sensorNum[i]==99){
       Serial.println("");
     }else{
       Serial.print("[");
-      Serial.print(readMux(sensorNum[i]));
+      sensor = readMux(sensorNum[i]);
+      Serial.print(sensor);
       Serial.print("]");
-      tempArr[++j] = readMux(sensorNum[i]);
+      tempArr[j++] = sensor;
     }
     delay(1);
   }
+  
   Serial.println("");
   Serial.println("========================================================");
   Serial.println("");
-  digitalWrite(LED_pin,LOW);
+
+  section(tempArr);
+ 
+  avgArr[0] = avg(tl,3);
+  avgArr[1] = avg(tr,3);
+  avgArr[2] = avg(ml,8);
+  avgArr[3] = avg(mr,8);
+  avgArr[4] = avg(bl,5);
+  avgArr[5] = avg(br,5);
+  
+  for(int k=0;k<6;k++) {
+    Serial.print(avgArr[k]);
+    if(avgArr[max1]<avgArr[k]) {
+      max2 = max1;
+      max1 = k;
+    }
+    Serial.print("   ");
+  } //최대값 구하기
+  for(int l=0;l<6;l++) {
+    if((l!=max1)&&(avgArr[max2]<avgArr[l])) {
+      max2 = l;
+    }
+  }
+  Serial.println();
+  Serial.print(max1);
+  Serial.print("   ");
+  Serial.print(max2);
+  Serial.println();
+
+  if(((max1==0)&&(max2==1)) || ((max1==1)&&(max2==0))) {
+    digitalWrite(LED_pin,LOW);
+  }
+  else {
+   digitalWrite(LED_pin,HIGH); 
+  }
   delay(500);
-  digitalWrite(LED_pin,HIGH);
 }
 
 
@@ -106,11 +155,64 @@ int readMux(int channel) {
   return val;
 }
 
-int verticalBal(int Arr[31]) {
-  int l1=0;
-  int 12=0;
-  int l3=0;
-  for(int i=0;i<31;i++) {
-    if()
+void initial() {
+  for(int i=0;i<31;i++) { //tempArr
+    tempArr[i] = 0;
   }
+  for(int j=0;j<3;j++) { //top
+    tl[j] = 0;
+    tr[j] = 0;
+  }
+  for(int k=0;k<8;k++) { //mid
+    ml[k] = 0;
+    mr[k] = 0;
+  }
+  for(int l=0;l<5;l++) { //bot
+    bl[l] = 0;
+    br[l] = 0;
+  }
+  for(int n=0;n<6;n++) {
+    avgArr[n] = 0;
+  }
+}
+
+void section(int Arr[]) {
+  int topL = 0;
+  int topR = 0;
+  int midL = 0;
+  int midR = 1;
+  int botL = 0;
+  int botR = 0;
+  for(int i=0;i<31;i++) {
+    if((i>=0)&&(i<=4)) {
+      bl[botL++] = Arr[i];
+    }
+    else if(((i>=5)&&(i<=9))||(i==11)||(i==13)) {
+      ml[midL++] = Arr[i];
+    }
+    else if(((i>=21)&&(i<=25))||(i==17)||(i==19)) {
+      mr[midR++] = Arr[i];
+    }
+    else if((i>=10)&&(i<=14)&&(i%2==0)) {
+      tl[topL++] = Arr[i];
+    }
+    else if((i>=16)&&(i<=20)&&(i%2==0)) {
+      tr[topR++] = Arr[i];
+    }
+    else if((i>=26)&&(i<=30)) {
+      br[botR++] = Arr[i];
+    }
+    else if(i==15) {
+      ml[7] = Arr[i];
+      mr[0] = Arr[i];
+    }
+  }
+}
+
+int avg(int* Arr,int s) {
+  int sum=0;
+  for(int i=0;i<s;i++) {
+    sum += Arr[i];
+  }
+  return sum/s;
 }
