@@ -12,19 +12,40 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name="org.techtown.SmartCushion.MainActivity">
+        <meta-data
+            android:name="com.kakao.sdk.AppKey"
+            android:value="@string/kakao_app_key"/>
 
+        <activity android:name="org.techtown.SmartCushion.MainActivity"></activity>
+        <activity
+            android:name=".SplashActivity"
+            android:theme="@style/SplashTheme"
+            android:screenOrientation="portrait">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
-        <activity android:name="org.techtown.SmartCushion.LoginActivity">
+
+        <activity android:name="org.techtown.SmartCushion.LoginActivity"
+            android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".SignupActivity"
+            android:configChanges="screenSize|orientation"
+            android:launchMode="singleTop"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
         <meta-data
             android:name="com.kakao.sdk.AppKey"
             android:value="@string/kakao_app_key" />
+
         <activity
             android:name="com.kakao.auth.authorization.authcode.KakaoWebViewActivity"
             android:launchMode="singleTop"
@@ -34,6 +55,9 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+
+
+
     </application>
 
 </manifest>

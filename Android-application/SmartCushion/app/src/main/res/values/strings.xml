@@ -1,4 +1,19 @@
 <resources>
     <string name="app_name">스마트 쿠션</string>
     <string name="kakao_app_key">ebe6d7736c7632bb45da884414b4fe7c</string>
+
+
+    <string name="usermgmg_name">Write Your Name</string>
+    <string name="usermgmg_age">Write Your Age</string>
+    <string name="usermgmg_signup_button">Signup</string>
+    <string-array name="usermgmg_gender_types">
+        <item>@string/female</item>
+        <item>@string/male</item>
+    </string-array>
+    <string name="male">Male</string>
+    <string name="female">Female</string>
+    <string name="cancel">Cancel</string>
+    <string name="ok">OK</string>
+
+    <string name="error_message_for_service_unavailable">Unstable network connection. \nPlease try again later.</string>
 </resources>

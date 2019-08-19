@@ -8,6 +8,8 @@ import com.kakao.auth.AuthType;
 import com.kakao.auth.IApplicationConfig;
 import com.kakao.auth.ISessionConfig;
 import com.kakao.auth.KakaoAdapter;
+import com.kakao.auth.KakaoSDK;
+
 public class GlobalApplication extends Application {
     private static GlobalApplication instance;
     public static final GlobalApplication getGlobalApplicationContext() {
@@ -15,6 +17,15 @@ public class GlobalApplication extends Application {
             throw new IllegalStateException("this application does not inherit com.kakao.GlobalApplication");
         return instance;
     }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        instance = this;
+
+        KakaoSDK.init(new KakaoSDKAdapter());
+    }
+
     protected static class KakaoSDKAdapter extends KakaoAdapter {
         /**
          * Session Config에 대해서는 default값들이 존재한다.
@@ -57,9 +68,5 @@ public class GlobalApplication extends Application {
             };
         }
     }
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        instance = this;
-    }
+
 }

@@ -35,4 +35,7 @@ dependencies {
     implementation 'com.android.support:design:28.0.0'
     implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0-alpha'
     implementation group: 'com.kakao.sdk', name: 'usermgmt', version: '1.21.1'
+
+
+    implementation 'com.mcxiaoke.volley:library:1.0.19'
 }
