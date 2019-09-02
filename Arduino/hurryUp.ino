@@ -1,3 +1,17 @@
+//  설정 - 키이벤트를 발생하는 문턱값. 무게중심의 좌표값. (범위 : -1.0 ~ 1.0)
+//        문턱값을 넘기면 키가 눌리게 됨. 0 에 가까울수록 민감하게 동작.
+const float THRESHOLD_COP_forth   = 0.3;    // 앞 쏠림. Y가 이 값보다 커야 키이벤트 발생.
+const float THRESHOLD_COP_back    = -0.85;  // 뒤 쏠림. Y가 이 값보다 작아야 키이벤트 발생.
+const float THRESHOLD_COP_left    = -0.22;  // 좌 쏠림. X가 이 값보다 작아야 키이벤트 발생.
+const float THRESHOLD_COP_right   = 0.22;   // 우 쏠림. X가 이 값보다 커야 키이벤트 발생.
+ 
+//----------------------------------------------
+//  무효 판정 문턱값. 측정값이 아래 문턱값보다 낮으면 무시함.
+const int THRESHOLD_SUM_row_1st   = 60;   // 1st row, front row
+const int THRESHOLD_SUM_row_3rd   = 60;   // 3rd row, back row
+const int THRESHOLD_SUM_row_2nd   = 105;  // 2nd row, left and right
+const int THRESHOLD_SUM_VERT      = 60; // SUM? PRESSURE?
+
 int En0 = 7;  //  Low enabled
 int En1 = 6;  //  Low enabled
 
@@ -7,10 +21,10 @@ int S1  = 4;
 int S2  = 3;
 int S3  = 2;
 
-
 int SIG_pin = A3;
 
 int LED_pin = 8;
+
 int sensorNum[35]={
   10,12,14,98,16,18,20,99,
   5,6,7,8,9,11,13,15,17,19,21,22,23,24,25,99,
@@ -18,14 +32,13 @@ int sensorNum[35]={
 }; 
 
 int tempArr[31];
+int standard[31];
 int avgArr[6]; //{tl,tr,ml,mr,bl,br}
 
-int tl[3];
-int tr[3];
-int ml[8];
-int mr[8];
-int bl[5];
-int br[5];
+int mode = 0; //0: 초기값 설정, 1: 자세 측정
+int count = -1;
+
+int posture = 0; //0: 정상, 1: 좌로 쏠림, 2: 우로 쏠림, 3: 앞으로 쏠림, 4: 뒤로 쏠림
 
 void setup() {
   Serial.begin(115200);
@@ -38,6 +51,10 @@ void setup() {
   pinMode(S3, OUTPUT);
 
   pinMode(LED_pin,OUTPUT);
+  
+  for(int i=0;i<31;i++) {
+    standard[i] = 0;
+  }
 }
 
 void loop() {
@@ -45,63 +62,125 @@ void loop() {
   int max1 = 0;
   int max2 = 1;
   int sensor = 0;
+  posture = 0;
   initial();
-  
+
   for (int i=0; i<35; i++){
     sensor = 0;
     if(sensorNum[i]==98){
-      Serial.print("  ");
+      //Serial.print("  ");
     }else if(sensorNum[i]==99){
-      Serial.println("");
+      //Serial.println("");
     }else{
-      Serial.print("[");
+      //Serial.print("[");
       sensor = readMux(sensorNum[i]);
-      Serial.print(sensor);
-      Serial.print("]");
+      //Serial.print(sensor);
+      //Serial.print("]");
       tempArr[j++] = sensor;
     }
     delay(1);
-  }
+  } //방석 센서값 추출
   
-  Serial.println("");
-  Serial.println("========================================================");
-  Serial.println("");
 
-  section(tempArr);
+  if(mode == 0) { //0: 초기값 설정
+    count++;
+    Serial.println(count);
+    for(int i=0;i<31;i++) {
+      standard[i] = standard[i] + tempArr[i];
+    }
+    if(count == 10) {
+      count = 0;
+      mode = 1;
+      for(int i=0;i<31;i++) {
+        standard[i] = standard[i]/count;
+      }
+    }
+    delay(1000);
+  }
+  else if(mode == 1) {
+    //---------------------------------------------------------
+  //     1, 3번 줄의 측정값으로 무게 중심의 Y 좌표 계산하기
+ //---------------------------------------------------------
+  int sum_row_1st = tempArr[10]+tempArr[12]+tempArr[14]+tempArr[16]+tempArr[18]+tempArr[20];
  
-  avgArr[0] = avg(tl,3);
-  avgArr[1] = avg(tr,3);
-  avgArr[2] = avg(ml,8);
-  avgArr[3] = avg(mr,8);
-  avgArr[4] = avg(bl,5);
-  avgArr[5] = avg(br,5);
-  
-  for(int k=0;k<6;k++) {
-    Serial.print(avgArr[k]);
-    if(avgArr[max1]<avgArr[k]) {
-      max2 = max1;
-      max1 = k;
+  int sum_row_3rd =   tempArr[0]+tempArr[1]+tempArr[2]+tempArr[3]+tempArr[4]
+                    +tempArr[26]+tempArr[27]+tempArr[28]+tempArr[29]+tempArr[30];
+ 
+  int sum_vertical = sum_row_1st + sum_row_3rd;
+ 
+  double avg_row_1st = sum_row_1st / 6;
+  double avg_row_3rd = sum_row_3rd / 10;
+ 
+  //  무게 중심의 Y 좌표 계산
+  float cop_vertical = 0.0;
+  if( 0 < sum_vertical) {
+    cop_vertical = (avg_row_1st * (1) + avg_row_3rd * (-1)) / (avg_row_1st + avg_row_3rd);
+  }
+ 
+  // 앞 쏠림, 뒤 쏠림
+  if( sum_vertical > THRESHOLD_SUM_VERT) {
+     if(THRESHOLD_COP_forth < cop_vertical) {
+      posture = 3;
     }
-    Serial.print("   ");
-  } //최대값 구하기
-  for(int l=0;l<6;l++) {
-    if((l!=max1)&&(avgArr[max2]<avgArr[l])) {
-      max2 = l;
+    else if(cop_vertical < THRESHOLD_COP_back) {
+      posture = 4;
     }
   }
-  Serial.println();
-  Serial.print(max1);
-  Serial.print("   ");
-  Serial.print(max2);
-  Serial.println();
-
-  if(((max1==0)&&(max2==1)) || ((max1==1)&&(max2==0))) {
-    digitalWrite(LED_pin,LOW);
+    
+ //---------------------------------------------------------
+ //     2번 줄의 측정값으로 무게 중심의 X 좌표 계산하기
+ //---------------------------------------------------------
+  int sum_row_2nd =  tempArr[5]+tempArr[6]+tempArr[7]+tempArr[8]+tempArr[9]
+                    +tempArr[11]+tempArr[13]+tempArr[15]+tempArr[17]+tempArr[19]
+                    +tempArr[21]+tempArr[22]+tempArr[23]+tempArr[24]+tempArr[25];
+ 
+  //  센서 2 번째 줄의 15개 센서의 측정값에 위치별 가중치(-7~7))를 부여하여 더합니다. 
+  //  그것을 7로 나눠서 좌표 범위를 -1~1 로 한정합니다.
+  int sum_wp_horizon = (  (-7)*tempArr[5]+(-6)*tempArr[6]+(-5)*tempArr[7]
+                          +(-4)*tempArr[8]+(-3)*tempArr[9]+(-2)*tempArr[11]
+                          +(-1)*tempArr[13]+(0)*tempArr[15]
+                          +(1)*tempArr[17]+(2)*tempArr[19]+(3)*tempArr[21]
+                          +(4)*tempArr[22]+(5)*tempArr[23]+(6)*tempArr[24]
+                          +(7)*tempArr[25] ) / 7.0; // divide 7.0 ==> unitize. (-7.0~7.0)
+ 
+  float cop_horizon = 0.0;
+  //  무게 중심의 X 좌표 계산
+  if(0 < sum_row_2nd) {
+    cop_horizon = sum_wp_horizon / (double)sum_row_2nd;
+  }
+ 
+  //  좌 쏠림, 우 쏠림
+  if(sum_row_2nd < THRESHOLD_SUM_row_2nd) {
+    
   }
   else {
-   digitalWrite(LED_pin,HIGH); 
+    //좌 쏠림
+    if(cop_horizon < THRESHOLD_COP_left) {
+      posture = 1;
+    }
+    //우 쏠림
+    else if(THRESHOLD_COP_right < cop_horizon) {
+      posture = 2;  
+    }
   }
-  delay(500);
+
+  if(posture) {
+    //analogWrite(LED_pin, 127);// 최대 : 127
+    digitalWrite(LED_pin,HIGH);
+    Serial.println(posture);
+    Serial.print("Led ON  ");
+  }
+  else {
+    //analogWrite(LED_pin, 0);
+    digitalWrite(LED_pin,LOW);
+    Serial.print("Led OFF  ");
+  }
+ 
+  //  무게 중심 계산값을 출력하여 확인하기.
+    Print_XY(cop_horizon, cop_vertical);  
+    
+    delay(1000);
+  }
 }
 
 
@@ -159,60 +238,11 @@ void initial() {
   for(int i=0;i<31;i++) { //tempArr
     tempArr[i] = 0;
   }
-  for(int j=0;j<3;j++) { //top
-    tl[j] = 0;
-    tr[j] = 0;
-  }
-  for(int k=0;k<8;k++) { //mid
-    ml[k] = 0;
-    mr[k] = 0;
-  }
-  for(int l=0;l<5;l++) { //bot
-    bl[l] = 0;
-    br[l] = 0;
-  }
-  for(int n=0;n<6;n++) {
-    avgArr[n] = 0;
-  }
 }
 
-void section(int Arr[]) {
-  int topL = 0;
-  int topR = 0;
-  int midL = 0;
-  int midR = 1;
-  int botL = 0;
-  int botR = 0;
-  for(int i=0;i<31;i++) {
-    if((i>=0)&&(i<=4)) {
-      bl[botL++] = Arr[i];
-    }
-    else if(((i>=5)&&(i<=9))||(i==11)||(i==13)) {
-      ml[midL++] = Arr[i];
-    }
-    else if(((i>=21)&&(i<=25))||(i==17)||(i==19)) {
-      mr[midR++] = Arr[i];
-    }
-    else if((i>=10)&&(i<=14)&&(i%2==0)) {
-      tl[topL++] = Arr[i];
-    }
-    else if((i>=16)&&(i<=20)&&(i%2==0)) {
-      tr[topR++] = Arr[i];
-    }
-    else if((i>=26)&&(i<=30)) {
-      br[botR++] = Arr[i];
-    }
-    else if(i==15) {
-      ml[7] = Arr[i];
-      mr[0] = Arr[i];
-    }
-  }
-}
-
-int avg(int* Arr,int s) {
-  int sum=0;
-  for(int i=0;i<s;i++) {
-    sum += Arr[i];
-  }
-  return sum/s;
+void Print_XY(float x, float y) {
+  Serial.print("x= ");
+  Serial.print(x);
+  Serial.print(", y= ");
+  Serial.println(y);  
 }
