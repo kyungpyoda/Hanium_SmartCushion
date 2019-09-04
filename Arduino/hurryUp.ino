@@ -33,12 +33,11 @@ int sensorNum[35]={
 
 int tempArr[31];
 int standard[31];
-int avgArr[6]; //{tl,tr,ml,mr,bl,br}
 
 int mode = 0; //0: 초기값 설정, 1: 자세 측정
 int count = -1;
 
-int posture = 0; //0: 정상, 1: 좌로 쏠림, 2: 우로 쏠림, 3: 앞으로 쏠림, 4: 뒤로 쏠림
+int posture = 0; //-1: 자리 비움, 0: 정상, 1: 좌로 쏠림, 2: 우로 쏠림, 3: 앞으로 쏠림, 4: 뒤로 쏠림
 
 void setup() {
   Serial.begin(115200);
@@ -54,6 +53,7 @@ void setup() {
   
   for(int i=0;i<31;i++) {
     standard[i] = 0;
+    tempArr[i] = 0;
   }
 }
 
@@ -63,7 +63,6 @@ void loop() {
   int max2 = 1;
   int sensor = 0;
   posture = 0;
-  initial();
 
   for (int i=0; i<35; i++){
     sensor = 0;
@@ -92,66 +91,72 @@ void loop() {
     for(int i=0;i<31;i++) {
       standard[i] = standard[i] + tempArr[i];
     }
-    if(count == 10) {
+    if(count == 10) { //10초간 초기값 설정
       count = 0;
       mode = 1;
       for(int i=0;i<31;i++) {
-        standard[i] = standard[i]/count; //초기값 설정
+        standard[i] = standard[i]/count; //초기값 업데이트
       }
+      //초기값에 따른 조정
       st_cop_vertical = vertical(standard);
       st_cop_horizon = horizon(standard);
-      st_vPivot = st_cop_vertical + 0.275;
-      st_hPivot = -st_cop_horizon;
+      st_vPivot = st_cop_vertical + 0.275; //Y조정값
+      st_hPivot = -st_cop_horizon; //X조정값
     }
     delay(1000);
   }
-  else if(mode == 1) {
+  else if(mode == 1) { //자세 측정
     posture = 0; 
-    float cop_vertical = vertical(tempArr);
+    //앞뒤 측정 
+    float raw_vertical = vertical(tempArr); //조정 전 Y무게중심값
+    float cop_vertical = raw_vertical + st_vPivot //초기값에 따른 무게중심값 조정
 
     int sum_vertical = tempArr[0]+tempArr[1]+tempArr[2]+tempArr[3]+tempArr[4]
                     +tempArr[10]+tempArr[12]+tempArr[14]+tempArr[16]+tempArr[18]+tempArr[20]
                     +tempArr[26]+tempArr[27]+tempArr[28]+tempArr[29]+tempArr[30];
-   // 앞 쏠림, 뒤 쏠림
-    if( sum_vertical > THRESHOLD_SUM_VERT) {
+   
+    if( sum_vertical > THRESHOLD_SUM_VERT) { //값이 유효한지 확인
        if(THRESHOLD_COP_forth < cop_vertical) {
-        posture = 3;
+        posture = 3; //앞으로 쏠림
       }
     else if(cop_vertical < THRESHOLD_COP_back) {
-       posture = 4;
+       posture = 4; //뒤로 쏠림
       }
     }
-    
+    //좌우 측정
     int sum_row_2nd =  tempArr[5]+tempArr[6]+tempArr[7]+tempArr[8]+tempArr[9]
                        +tempArr[11]+tempArr[13]+tempArr[15]+tempArr[17]+tempArr[19]
                        +tempArr[21]+tempArr[22]+tempArr[23]+tempArr[24]+tempArr[25];
  
-    float cop_horizon = horizon(tempArr);
+    float raw_horizon = horizon(tempArr); //조정 전 X무게중심값
+    float cop_horizon = raw_horizon + st_hPivot; // 초기값에 따른 무게중심값 조정
   
-    //  좌 쏠림, 우 쏠림
-    if(sum_row_2nd > THRESHOLD_SUM_row_2nd) {
+    if(sum_row_2nd > THRESHOLD_SUM_row_2nd) { //값이 유효한지 확인
       if(cop_horizon < THRESHOLD_COP_left) {
-        posture = 1;
+        posture = 1; //좌로 쏠림
       }
       else if(THRESHOLD_COP_right < cop_horizon) {
-       posture = 2;  
+       posture = 2; //우로 쏠림
       } 
     }
-
-    if(sum_vertical < THRESHOLD_SUM_VERT && sum_row_2nd < THRESHOLD_SUM_row_2nd) { //값 무시시
-      posture = 0;
+    else if(sum_vertical < THRESHOLD_SUM_VERT) {//자리비움 확인
+       posture = -1;
     }
+    Serial.println(posture);
 
-    if(posture) {
+    if(posture > 0) {
       //analogWrite(LED_pin, 127);// 최대 : 127
       digitalWrite(LED_pin,HIGH);
-      Serial.println(posture);
       Serial.print("Led ON  ");
     }
-    else {
+    else if(posture == 0) {
       //analogWrite(LED_pin, 0);
       digitalWrite(LED_pin,LOW);
       Serial.print("Led OFF  ");
+    }
+    else if(posture == -1) {
+      digitalWrite(LED_pin,LOW);
+      Serial.print("Away");
     }
  
     //  무게 중심 계산값을 출력하여 확인하기.
@@ -208,12 +213,6 @@ int readMux(int channel) {
 
   //return the value
   return val;
-}
-
-void initial() {
-  for(int i=0;i<31;i++) { //tempArr
-    tempArr[i] = 0;
-  }
 }
 
 void Print_XY(float x, float y) {
