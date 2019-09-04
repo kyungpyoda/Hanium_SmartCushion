@@ -83,6 +83,10 @@ void loop() {
   
 
   if(mode == 0) { //0: 초기값 설정
+    float st_cop_vertical = 0;
+    float st_cop_horizon = 0;
+    float st_vPivot = 0;
+    float st_hPivot = 0;
     count++;
     Serial.println(count);
     for(int i=0;i<31;i++) {
@@ -92,97 +96,69 @@ void loop() {
       count = 0;
       mode = 1;
       for(int i=0;i<31;i++) {
-        standard[i] = standard[i]/count;
+        standard[i] = standard[i]/count; //초기값 설정
       }
+      st_cop_vertical = vertical(standard);
+      st_cop_horizon = horizon(standard);
+      st_vPivot = st_cop_vertical + 0.275;
+      st_hPivot = -st_cop_horizon;
     }
     delay(1000);
   }
   else if(mode == 1) {
-    //---------------------------------------------------------
-  //     1, 3번 줄의 측정값으로 무게 중심의 Y 좌표 계산하기
- //---------------------------------------------------------
-  int sum_row_1st = tempArr[10]+tempArr[12]+tempArr[14]+tempArr[16]+tempArr[18]+tempArr[20];
- 
-  int sum_row_3rd =   tempArr[0]+tempArr[1]+tempArr[2]+tempArr[3]+tempArr[4]
-                    +tempArr[26]+tempArr[27]+tempArr[28]+tempArr[29]+tempArr[30];
- 
-  int sum_vertical = sum_row_1st + sum_row_3rd;
- 
-  double avg_row_1st = sum_row_1st / 6;
-  double avg_row_3rd = sum_row_3rd / 10;
- 
-  //  무게 중심의 Y 좌표 계산
-  float cop_vertical = 0.0;
-  if( 0 < sum_vertical) {
-    cop_vertical = (avg_row_1st * (1) + avg_row_3rd * (-1)) / (avg_row_1st + avg_row_3rd);
-  }
- 
-  // 앞 쏠림, 뒤 쏠림
-  if( sum_vertical > THRESHOLD_SUM_VERT) {
-     if(THRESHOLD_COP_forth < cop_vertical) {
-      posture = 3;
-    }
-    else if(cop_vertical < THRESHOLD_COP_back) {
-      posture = 4;
-    }
-  }
-    
- //---------------------------------------------------------
- //     2번 줄의 측정값으로 무게 중심의 X 좌표 계산하기
- //---------------------------------------------------------
-  int sum_row_2nd =  tempArr[5]+tempArr[6]+tempArr[7]+tempArr[8]+tempArr[9]
-                    +tempArr[11]+tempArr[13]+tempArr[15]+tempArr[17]+tempArr[19]
-                    +tempArr[21]+tempArr[22]+tempArr[23]+tempArr[24]+tempArr[25];
- 
-  //  센서 2 번째 줄의 15개 센서의 측정값에 위치별 가중치(-7~7))를 부여하여 더합니다. 
-  //  그것을 7로 나눠서 좌표 범위를 -1~1 로 한정합니다.
-  int sum_wp_horizon = (  (-7)*tempArr[5]+(-6)*tempArr[6]+(-5)*tempArr[7]
-                          +(-4)*tempArr[8]+(-3)*tempArr[9]+(-2)*tempArr[11]
-                          +(-1)*tempArr[13]+(0)*tempArr[15]
-                          +(1)*tempArr[17]+(2)*tempArr[19]+(3)*tempArr[21]
-                          +(4)*tempArr[22]+(5)*tempArr[23]+(6)*tempArr[24]
-                          +(7)*tempArr[25] ) / 7.0; // divide 7.0 ==> unitize. (-7.0~7.0)
- 
-  float cop_horizon = 0.0;
-  //  무게 중심의 X 좌표 계산
-  if(0 < sum_row_2nd) {
-    cop_horizon = sum_wp_horizon / (double)sum_row_2nd;
-  }
- 
-  //  좌 쏠림, 우 쏠림
-  if(sum_row_2nd < THRESHOLD_SUM_row_2nd) {
-    
-  }
-  else {
-    //좌 쏠림
-    if(cop_horizon < THRESHOLD_COP_left) {
-      posture = 1;
-    }
-    //우 쏠림
-    else if(THRESHOLD_COP_right < cop_horizon) {
-      posture = 2;  
-    }
-  }
+    posture = 0; 
+    float cop_vertical = vertical(tempArr);
 
-  if(posture) {
-    //analogWrite(LED_pin, 127);// 최대 : 127
-    digitalWrite(LED_pin,HIGH);
-    Serial.println(posture);
-    Serial.print("Led ON  ");
-  }
-  else {
-    //analogWrite(LED_pin, 0);
-    digitalWrite(LED_pin,LOW);
-    Serial.print("Led OFF  ");
-  }
- 
-  //  무게 중심 계산값을 출력하여 확인하기.
-    Print_XY(cop_horizon, cop_vertical);  
+    int sum_vertical = tempArr[0]+tempArr[1]+tempArr[2]+tempArr[3]+tempArr[4]
+                    +tempArr[10]+tempArr[12]+tempArr[14]+tempArr[16]+tempArr[18]+tempArr[20]
+                    +tempArr[26]+tempArr[27]+tempArr[28]+tempArr[29]+tempArr[30];
+   // 앞 쏠림, 뒤 쏠림
+    if( sum_vertical > THRESHOLD_SUM_VERT) {
+       if(THRESHOLD_COP_forth < cop_vertical) {
+        posture = 3;
+      }
+    else if(cop_vertical < THRESHOLD_COP_back) {
+       posture = 4;
+      }
+    }
     
+    int sum_row_2nd =  tempArr[5]+tempArr[6]+tempArr[7]+tempArr[8]+tempArr[9]
+                       +tempArr[11]+tempArr[13]+tempArr[15]+tempArr[17]+tempArr[19]
+                       +tempArr[21]+tempArr[22]+tempArr[23]+tempArr[24]+tempArr[25];
+ 
+    float cop_horizon = horizon(tempArr);
+  
+    //  좌 쏠림, 우 쏠림
+    if(sum_row_2nd > THRESHOLD_SUM_row_2nd) {
+      if(cop_horizon < THRESHOLD_COP_left) {
+        posture = 1;
+      }
+      else if(THRESHOLD_COP_right < cop_horizon) {
+       posture = 2;  
+      } 
+    }
+
+    if(sum_vertical < THRESHOLD_SUM_VERT && sum_row_2nd < THRESHOLD_SUM_row_2nd) { //값 무시시
+      posture = 0;
+    }
+
+    if(posture) {
+      //analogWrite(LED_pin, 127);// 최대 : 127
+      digitalWrite(LED_pin,HIGH);
+      Serial.println(posture);
+      Serial.print("Led ON  ");
+    }
+    else {
+      //analogWrite(LED_pin, 0);
+      digitalWrite(LED_pin,LOW);
+      Serial.print("Led OFF  ");
+    }
+ 
+    //  무게 중심 계산값을 출력하여 확인하기.
+    Print_XY(cop_horizon, cop_vertical);  
     delay(1000);
   }
 }
-
 
 int readMux(int channel) {
   int controlPin[] = {S0, S1, S2, S3, En0, En1};
@@ -245,4 +221,45 @@ void Print_XY(float x, float y) {
   Serial.print(x);
   Serial.print(", y= ");
   Serial.println(y);  
+}
+
+float vertical(int* sensor) { //무게중심 Y값 계산
+  int sum_row_1st = sensor[10]+sensor[12]+sensor[14]+sensor[16]+sensor[18]+sensor[20];
+ 
+  int sum_row_3rd =   sensor[0]+sensor[1]+sensor[2]+sensor[3]+sensor[4]
+                    +sensor[26]+sensor[27]+sensor[28]+sensor[29]+sensor[30];
+ 
+  int sum_vertical = sum_row_1st + sum_row_3rd;
+ 
+  double avg_row_1st = sum_row_1st / 6;
+  double avg_row_3rd = sum_row_3rd / 10;
+ 
+  //  무게 중심의 Y 좌표 계산
+  float cop_vertical = 0.0;
+  if( 0 < sum_vertical) {
+    cop_vertical = (avg_row_1st * (1) + avg_row_3rd * (-1)) / (avg_row_1st + avg_row_3rd);
+  }
+  return cop_vertical;
+}
+
+float horizon(int* sensor) { //무게 중심 X값 계산
+  int sum_row_2nd =  sensor[5]+sensor[6]+sensor[7]+sensor[8]+sensor[9]
+                    +sensor[11]+sensor[13]+sensor[15]+sensor[17]+sensor[19]
+                    +sensor[21]+sensor[22]+sensor[23]+sensor[24]+sensor[25];
+ 
+  //  센서 2 번째 줄의 15개 센서의 측정값에 위치별 가중치(-7~7))를 부여하여 더합니다. 
+  //  그것을 7로 나눠서 좌표 범위를 -1~1 로 한정합니다.
+  int sum_wp_horizon = (  (-7)*sensor[5]+(-6)*sensor[6]+(-5)*sensor[7]
+                          +(-4)*sensor[8]+(-3)*sensor[9]+(-2)*sensor[11]
+                          +(-1)*sensor[13]+(0)*sensor[15]
+                          +(1)*sensor[17]+(2)*sensor[19]+(3)*sensor[21]
+                          +(4)*sensor[22]+(5)*sensor[23]+(6)*sensor[24]
+                          +(7)*sensor[25] ) / 7.0; // divide 7.0 ==> unitize. (-7.0~7.0)
+ 
+  float cop_horizon = 0.0;
+  //  무게 중심의 X 좌표 계산
+  if(0 < sum_row_2nd) {
+    cop_horizon = sum_wp_horizon / (double)sum_row_2nd;
+  }
+  return cop_horizon;
 }
