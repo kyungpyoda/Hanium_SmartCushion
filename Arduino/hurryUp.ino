@@ -1,9 +1,10 @@
+#include <stdlib.h>
 //  설정 - 키이벤트를 발생하는 문턱값. 무게중심의 좌표값. (범위 : -1.0 ~ 1.0)
 //        문턱값을 넘기면 키가 눌리게 됨. 0 에 가까울수록 민감하게 동작.
-const float THRESHOLD_COP_forth   = 0.3;    // 앞 쏠림. Y가 이 값보다 커야 키이벤트 발생.
-const float THRESHOLD_COP_back    = -0.85;  // 뒤 쏠림. Y가 이 값보다 작아야 키이벤트 발생.
-const float THRESHOLD_COP_left    = -0.22;  // 좌 쏠림. X가 이 값보다 작아야 키이벤트 발생.
-const float THRESHOLD_COP_right   = 0.22;   // 우 쏠림. X가 이 값보다 커야 키이벤트 발생.
+const float THRESHOLD_COP_forth   = -0.05;    // 앞 쏠림. Y가 이 값보다 커야 키이벤트 발생.
+const float THRESHOLD_COP_back    = -0.2;  // 뒤 쏠림. Y가 이 값보다 작아야 키이벤트 발생.
+const float THRESHOLD_COP_left    = -0.10;  // 좌 쏠림. X가 이 값보다 작아야 키이벤트 발생.
+const float THRESHOLD_COP_right   = 0;   // 우 쏠림. X가 이 값보다 커야 키이벤트 발생.
  
 //----------------------------------------------
 //  무효 판정 문턱값. 측정값이 아래 문턱값보다 낮으면 무시함.
@@ -15,14 +16,12 @@ const int THRESHOLD_SUM_VERT      = 60; // SUM? PRESSURE?
 int En0 = 7;  //  Low enabled
 int En1 = 6;  //  Low enabled
 
-
 int S0  = 5;
 int S1  = 4;
 int S2  = 3;
 int S3  = 2;
 
 int SIG_pin = A3;
-
 int LED_pin = 8;
 
 int sensorNum[35]={
@@ -38,6 +37,11 @@ int mode = 0; //0: 초기값 설정, 1: 자세 측정
 int count = -1;
 
 int posture = 0; //-1: 자리 비움, 0: 정상, 1: 좌로 쏠림, 2: 우로 쏠림, 3: 앞으로 쏠림, 4: 뒤로 쏠림
+char* income = "";
+float st_cop_vertical = 0;
+float st_cop_horizon = 0;
+float st_vPivot = 0;
+float st_hPivot = 0;
 
 void setup() {
   Serial.begin(115200);
@@ -62,6 +66,15 @@ void loop() {
   int max1 = 0;
   int max2 = 1;
   int sensor = 0;
+
+  while(Serial.available()) { //모드 변경 명령
+    income += (char)Serial.read();
+    mode = atoi(income);
+    digitalWrite(LED_pin,HIGH);
+    delay(250);
+    digitalWrite(LED_pin,LOW);
+    income = "";
+  }
   posture = 0;
 
   for (int i=0; i<35; i++){
@@ -82,10 +95,6 @@ void loop() {
   
 
   if(mode == 0) { //0: 초기값 설정
-    float st_cop_vertical = 0;
-    float st_cop_horizon = 0;
-    float st_vPivot = 0;
-    float st_hPivot = 0;
     count++;
     Serial.println(count);
     for(int i=0;i<31;i++) {
@@ -103,13 +112,15 @@ void loop() {
       st_vPivot = st_cop_vertical + 0.275; //Y조정값
       st_hPivot = -st_cop_horizon; //X조정값
     }
+    digitalWrite(LED_pin,HIGH);
     delay(1000);
+    digitalWrite(LED_pin,LOW);
   }
   else if(mode == 1) { //자세 측정
     posture = 0; 
     //앞뒤 측정 
     float raw_vertical = vertical(tempArr); //조정 전 Y무게중심값
-    float cop_vertical = raw_vertical + st_vPivot //초기값에 따른 무게중심값 조정
+    float cop_vertical = raw_vertical + st_vPivot; //초기값에 따른 무게중심값 조정
 
     int sum_vertical = tempArr[0]+tempArr[1]+tempArr[2]+tempArr[3]+tempArr[4]
                     +tempArr[10]+tempArr[12]+tempArr[14]+tempArr[16]+tempArr[18]+tempArr[20]
@@ -156,11 +167,21 @@ void loop() {
     }
     else if(posture == -1) {
       digitalWrite(LED_pin,LOW);
-      Serial.print("Away");
+      Serial.print("Away ");
     }
  
     //  무게 중심 계산값을 출력하여 확인하기.
     Print_XY(cop_horizon, cop_vertical);  
+    /*Serial.print("%d,",posture);
+    for(int i=0;i<31;i++) {
+        Serial.print(tempArr[i]);
+        if(i!=30) {
+            Serial.print(",");
+        }
+        else {
+            Serial.println();
+        }
+    }*/
     delay(1000);
   }
 }
@@ -236,7 +257,8 @@ float vertical(int* sensor) { //무게중심 Y값 계산
   //  무게 중심의 Y 좌표 계산
   float cop_vertical = 0.0;
   if( 0 < sum_vertical) {
-    cop_vertical = (avg_row_1st * (1) + avg_row_3rd * (-1)) / (avg_row_1st + avg_row_3rd);
+    //cop_vertical = (avg_row_1st * (1) + avg_row_3rd * (-1)) / (avg_row_1st + avg_row_3rd);
+    cop_vertical = (avg_row_1st * (-1) + avg_row_3rd * (1)) / (avg_row_1st + avg_row_3rd);
   }
   return cop_vertical;
 }
