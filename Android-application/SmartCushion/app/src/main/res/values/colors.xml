@@ -12,4 +12,9 @@
     <color name="color6">#FFFFFF</color>
     <color name="color7">#000000</color>
     <color name="color8">#4A4A4C</color>
+    <color name="color9">#EDEDED</color>
+    <color name="color10">#E0E0E0</color>
+
+    <color name="barR">#FF0000</color>
+    <color name="barB">#0000FF</color>
 </resources>
