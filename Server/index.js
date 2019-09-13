@@ -18,12 +18,17 @@ client.on('connect',function(data){
         client.subscribe('cushion');
 });
 client.on('message',function(topic, message){
+        //ver 1.1
+        var currentdate = new Date();
+        var meg_date = currentdate.getFullYear() + ':' + (currentdate.getMonth()+1) + ':' + currentdate.getDate();
+        var meg_time = currentdate.getHours() + ':' + currentdate.getMinutes() + ':' + currentdate.getSeconds();
+
         console.log(topic + ' : ' + message);
         dbo.collection("test").insertOne(
                 {//Data Schema
                         //user : next version ; multi user,
-                        //date : data insert date,
-                        //time : data insert time,
+                        date : meg_date,//message date ver1.1
+                        time : meg_time,//message time ver1.1
                         position : parseInt(message)
                 },
                 function(err, res){
@@ -36,3 +41,27 @@ client.on('message',function(topic, message){
                                 console.log('success : ' + message);
         });
 });
+
+//time Scheduler ver1.1
+var scheduler = require('cron').CronJob;
+
+//const job = new scheduler('00 00 */1 * * *', function(){
+const job = new scheduler('* * * * * *',function(){
+        //DB
+        var date = new Date();
+        var tmp_date = date.getFullYear() + ':' + (date.getMonth()+1) + ':' + date.getDate();
+        var tmp_time = date.getHours() + ':';
+        var query = {
+                date : tmp_date//, 변수로 넣으면 검색이안됨...
+//              time : new RegExp('^' + tmp_time)
+        };
+
+        console.log('find Value : ' + tmp_date + ' ' + tmp_time);//debug
+
+        dbo.collection('test').find(query).toArray().then((docs) => {
+                console.log(docs);
+        }).catch((err) => {
+                console.log(err)
+        });
+});
+job.start();
