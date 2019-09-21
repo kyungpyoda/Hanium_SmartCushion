@@ -1,10 +1,10 @@
-#include <stdlib.h>
+
 //  설정 - 키이벤트를 발생하는 문턱값. 무게중심의 좌표값. (범위 : -1.0 ~ 1.0)
 //        문턱값을 넘기면 키가 눌리게 됨. 0 에 가까울수록 민감하게 동작.
-const float THRESHOLD_COP_forth   = -0.05;    // 앞 쏠림. Y가 이 값보다 커야 키이벤트 발생.
-const float THRESHOLD_COP_back    = -0.2;  // 뒤 쏠림. Y가 이 값보다 작아야 키이벤트 발생.
-const float THRESHOLD_COP_left    = -0.22;  // 좌 쏠림. X가 이 값보다 작아야 키이벤트 발생.
-const float THRESHOLD_COP_right   = 0.22;   // 우 쏠림. X가 이 값보다 커야 키이벤트 발생.
+const float THRESHOLD_COP_forth   = 0.3;    // 앞 쏠림. Y가 이 값보다 커야 키이벤트 발생. 0.3
+const float THRESHOLD_COP_back    = -0.85;  // 뒤 쏠림. Y가 이 값보다 작아야 키이벤트 발생. -0.85
+const float THRESHOLD_COP_left    = -0.22;  // 좌 쏠림. X가 이 값보다 작아야 키이벤트 발생. -0.22
+const float THRESHOLD_COP_right   = 0.22;   // 우 쏠림. X가 이 값보다 커야 키이벤트 발생. 0.22
  
 //----------------------------------------------
 //  무효 판정 문턱값. 측정값이 아래 문턱값보다 낮으면 무시함.
@@ -23,12 +23,6 @@ int S3  = 2;
 
 int SIG_pin = A3;
 int LED_pin = 8;
-
-int sensorNum[35]={
-  10,12,14,98,16,18,20,99,
-  5,6,7,8,9,11,13,15,17,19,21,22,23,24,25,99,
-  0,1,2,3,4,98,26,27,28,29,30
-}; 
 
 int tempArr[31];
 int standard[31];
@@ -67,48 +61,33 @@ void setup() {
 }
 
 void loop() {
-  int j = 0;
-  int max1 = 0;
-  int max2 = 1;
   int sensor = 0;
 
   while(Serial.available()) { //모드 변경 명령
     income += (char)Serial.read();
     mode = atoi(income);
-    digitalWrite(LED_pin,HIGH);
-    delay(250);
     digitalWrite(LED_pin,LOW);
+    delay(250);
+    digitalWrite(LED_pin,HIGH);
     income = "";
   }
   position = 0;
   xPosition = 0;
   yPosition = 0;
 
-  for (int i=0; i<35; i++){
-    sensor = 0;
-    if(sensorNum[i]==98){
-      //Serial.print("  ");
-    }else if(sensorNum[i]==99){
-      //Serial.println("");
-    }else{
-      //Serial.print("[");
-      sensor = readMux(sensorNum[i]);
-      //Serial.print(sensor);
-      //Serial.print("]");
-      tempArr[j++] = sensor;
-    }
-    delay(1);
-  } //방석 센서값 추출
+  //방석 센서값 추출
+  for(int i=0;i<33;i++) {
+    tempArr[i] = readMux(i);
+  }
   
 
   if(mode == 0) { //0: 초기값 설정
     count++;
-    Serial.println(count);
+    //Serial.println(count);
     for(int i=0;i<31;i++) {
       standard[i] = standard[i] + tempArr[i];
     }
     if(count == 10) { //10초간 초기값 설정
-      count = 0;
       mode = 1;
       for(int i=0;i<31;i++) {
         standard[i] = standard[i]/count; //초기값 업데이트
@@ -118,6 +97,7 @@ void loop() {
       st_cop_horizon = horizon(standard);
       st_vPivot = st_cop_vertical + 0.275; //Y조정값
       st_hPivot = -st_cop_horizon; //X조정값
+      count = 0;
     }
     digitalWrite(LED_pin,HIGH);
     delay(1000);
@@ -176,27 +156,24 @@ void loop() {
       awayCnt++;
     }
     
-    Serial.println(position);
     oldPosition = position;
 
-    if(position > 0) {
+    if(position > 0) {//wrong position
       //analogWrite(LED_pin, 127);// 최대 : 127
       digitalWrite(LED_pin,HIGH);
-      Serial.print("Led ON  ");
     }
-    else if(position == 0) {
+    else if(position == 0) { //right position
       //analogWrite(LED_pin, 0);
       digitalWrite(LED_pin,LOW);
-      Serial.print("Led OFF  ");
     }
-    else if(position == -1) {
+    else if(position == -1) { //away
       digitalWrite(LED_pin,LOW);
-      Serial.print("Away ");
     }
  
     //  무게 중심 계산값을 출력하여 확인하기.
-    Print_XY(cop_horizon, cop_vertical);  
-    /*Serial.print("%d,",position);
+    //Print_XY(cop_horizon, cop_vertical);  
+    Serial.print(position);
+    Serial.print(",");
     for(int i=0;i<31;i++) {
         Serial.print(tempArr[i]);
         if(i!=30) {
@@ -205,7 +182,7 @@ void loop() {
         else {
             Serial.println();
         }
-    }*/
+    }
     delay(1000);
   }
 }
