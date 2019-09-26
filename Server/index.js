@@ -26,9 +26,9 @@ client.on('message',function(topic, message){
         dbo.collection("test").insertOne(
                 {//Data Schema
                         //user : next version ; multi user,
-                        date : meg_date,//message date ver1.1
-                        time : meg_time,//message time ver1.1
-                        position : parseInt(message)
+                        date: meg_date,//message date ver1.1
+                        time: meg_time,//message time ver1.1
+                        position: parseInt(message)
                 },
                 function(err, res){
                         if(err)
@@ -46,8 +46,8 @@ client.on('message',function(topic, message){
 //*******************************//
 var scheduler = require('cron').CronJob;
 
-const job = new scheduler('00 00 */1 * * *', function(){
-//const job = new scheduler('*/10 * * * * *',function(){
+//const job = new scheduler('00 00 */1 * * *', function(){
+const job = new scheduler('*/10 * * * * *',function(){
         //DB
         var date = new Date();
         var tmp_date = date.getFullYear() + ':' + (date.getMonth()+1) + ':' + date.getDate();
@@ -65,10 +65,12 @@ const job = new scheduler('00 00 */1 * * *', function(){
                 console.log(err)
         });
 
-        //average function
+        //count function position에서 제일 많은 값 계산
+        //ver1.3
         dbo.collection('test').aggregate([
                 {$match:{date: tmp_date , time: new RegExp('^'+tmp_time)}},
-                {$group: {_id: 'test', avg_position: {$avg: '$position'}}},
+                {$group: {_id: '$position', count:{$sum: 1}}},
+                {$sort: {count: -1}},
                 {$limit: 1}
         ]).toArray().then((docs) =>{
                 console.log('------------------avg_db');
@@ -77,32 +79,42 @@ const job = new scheduler('00 00 */1 * * *', function(){
                 dbo
                         .collection('avg')
                         .updateOne(
-                        //해당쿼리 찾기
-                        {
-                                _id: tmp_date
-                        },
-                        //Schema
-                        {$set:{
-                                _id: tmp_date,//이후 user부분을 추가하거나, id형식을 바꿔야함
-                                [date.getHours()-1]: docs[0].avg_position
-                        }},{upsert: true},function(err)
-                        {
-                                if(err)
+                                //해당쿼리 찾기
+                                {_id: tmp_date},
+                                //Schema
+                                {$set:{_id: tmp_date, [tmp_time]: docs[0]._id}},
+                                {upsert: true},function(err)
                                 {
-                                        console.log(err);
-                                        return;
+                                        if(err)
+                                        {
+                                                //insert error시, 앉아있지 않은것으로 판단, -1 기입
+                                                dbo
+                                                        .collection('avg')
+                                                        .updateOne(
+                                                        {_id: tmp_date},
+                                                        {$set:{ _id: tmp_date,[tmp_time]: -1}},
+                                                        {upsert: true});
+                                        }
+                                        else
+                                                console.log('avg_insert ok');
                                 }
-                                else
-                                        console.log('avg_insert ok');
-                        });
+                        );
                 console.log('------------------------');
         }).catch((err) => {
                 console.log('aggregate error : ' + err)
+                //aggregate error시, 사용자 부재로 판단, -1기입
+                dbo
+                        .collection('avg')
+                        .updateOne(
+                                {_id: tmp_date},
+                                {$set:{_id: tmp_date, [tmp_time]: -1}},
+                                {upsert: true}
+                        );
         });
 });
 
 //********************************//
-//                http               //
+//            http ver1.2         //
 //********************************//
 
 
@@ -114,11 +126,11 @@ app.use(bodyParser.urlencoded({extended: false}));
 app.get('/data/:id/:date', function (req, res) {
         dbo
                 .collection('avg')
-                .find({date: req.params.date})
+                .find({_id: req.params.date})
                 .toArray(function(err,items){
                         res.send(items);
                 });
-        console.log(req.params.date);
+        console.log('app find : '+req.params.date);
         //res.send({id: '',date: '2019-9-22',position: '1234567890123456789012345678901234'});
 });
 
