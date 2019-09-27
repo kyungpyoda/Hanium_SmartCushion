@@ -2,9 +2,9 @@
 //  설정 - 키이벤트를 발생하는 문턱값. 무게중심의 좌표값. (범위 : -1.0 ~ 1.0)
 //        문턱값을 넘기면 키가 눌리게 됨. 0 에 가까울수록 민감하게 동작.
 const float THRESHOLD_COP_forth   = 0.3;    // 앞 쏠림. Y가 이 값보다 커야 키이벤트 발생. 0.3
-const float THRESHOLD_COP_back    = -0.85;  // 뒤 쏠림. Y가 이 값보다 작아야 키이벤트 발생. -0.85
-const float THRESHOLD_COP_left    = -0.22;  // 좌 쏠림. X가 이 값보다 작아야 키이벤트 발생. -0.22
-const float THRESHOLD_COP_right   = 0.22;   // 우 쏠림. X가 이 값보다 커야 키이벤트 발생. 0.22
+const float THRESHOLD_COP_back    = -0.65;  // 뒤 쏠림. Y가 이 값보다 작아야 키이벤트 발생. -0.85
+const float THRESHOLD_COP_left    = -0.15;  // 좌 쏠림. X가 이 값보다 작아야 키이벤트 발생. -0.22
+const float THRESHOLD_COP_right   = 0.15;   // 우 쏠림. X가 이 값보다 커야 키이벤트 발생. 0.22
  
 //----------------------------------------------
 //  무효 판정 문턱값. 측정값이 아래 문턱값보다 낮으면 무시함.
@@ -28,6 +28,8 @@ int tempArr[31];
 int standard[31];
 
 int mode = 0; //0: 초기값 설정, 1: 자세 측정
+int vibrate = 4; //3: 진동 비활성화, 4: 진동 활성화
+int out = 0; //Arduino -> App, 2: 측성완료
 int count = -1;
 
 int position = 0; //-1: 자리 비움, 0: 정상, 1: 좌로 쏠림, 2: 우로 쏠림, 3: 앞으로 쏠림, 4: 뒤로 쏠림, 5: 다리 꼼
@@ -65,7 +67,17 @@ void loop() {
 
   while(Serial.available()) { //모드 변경 명령
     income += (char)Serial.read();
-    mode = atoi(income);
+    switch(atoi(income)) {
+      case 0:
+        mode = 0;
+        break;
+      case 3:
+        vibrate = 3;
+        break;
+      case 4:
+        vibrate = 4;
+        break;
+    }
     digitalWrite(LED_pin,LOW);
     delay(250);
     digitalWrite(LED_pin,HIGH);
@@ -95,8 +107,10 @@ void loop() {
       //초기값에 따른 조정
       st_cop_vertical = vertical(standard);
       st_cop_horizon = horizon(standard);
-      st_vPivot = st_cop_vertical + 0.275; //Y조정값
+      st_vPivot = st_cop_vertical - (THRESHOLD_COP_forth + THRESHOLD_COP_back)/2; //Y조정값
       st_hPivot = -st_cop_horizon; //X조정값
+      out = 2;
+      Serial.println(out);
       count = 0;
     }
     digitalWrite(LED_pin,HIGH);
@@ -148,7 +162,12 @@ void loop() {
       position = yPosition + 2;
     }
     else if(xPosition && (yPosition == 2)) {
-      position = 5; //x값이 존재하고 무게중심이 뒤로 가 있다면 다리를 꼬았다고 판단
+      if(yPosition == 2) {
+        position = 5; //x값이 존재하고 무게중심이 뒤로 가 있다면 다리를 꼬았다고 판단
+      }
+      else {
+        position = xPosition;
+      }
     }
 
     if((position == -1)&&(awayCnt < 10)) { //10초이상 무효값이 입력될 경우 자리를 비웠다고 판단
@@ -159,14 +178,21 @@ void loop() {
     oldPosition = position;
 
     if(position > 0) {//wrong position
-      //analogWrite(LED_pin, 127);// 최대 : 127
       digitalWrite(LED_pin,HIGH);
+      if(vibrate == 4) {
+        //analogWrite(LED_pin, 127);// 최대 : 127
+      }
     }
     else if(position == 0) { //right position
-      //analogWrite(LED_pin, 0);
       digitalWrite(LED_pin,LOW);
+      if(vibrate == 4) {
+        //analogWrite(LED_pin, 0);// 최대 : 127
+      }
     }
     else if(position == -1) { //away
+      if(vibrate == 4) {
+        //analogWrite(LED_pin,0);
+      }
       digitalWrite(LED_pin,LOW);
     }
  
