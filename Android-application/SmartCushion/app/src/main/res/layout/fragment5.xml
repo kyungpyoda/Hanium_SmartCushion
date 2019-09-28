@@ -11,7 +11,7 @@
     tools:context=".Fragment5">
 
     <Button
-        android:id="@+id/button8"
+        android:id="@+id/button_logout"
         android:layout_width="match_parent"
         android:layout_height="80dp"
         android:layout_marginBottom="30dp"
@@ -19,7 +19,7 @@
         android:textSize="30sp" />
 
     <Button
-        android:id="@+id/button9"
+        android:id="@+id/button_setting"
         android:layout_width="match_parent"
         android:layout_height="60dp"
         android:layout_marginBottom="50dp"
@@ -43,12 +43,11 @@
             android:textSize="30sp" />
 
         <Switch
-            android:id="@+id/switch4"
+            android:id="@+id/switch_live"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_marginLeft="10dp"
             android:layout_weight="2"
-            android:enabled="false"
             android:text="실시간 자세 교정"
             android:textSize="20sp"
             android:thumb="@drawable/switch_thumb"

@@ -6,4 +6,18 @@
     android:layout_height="match_parent"
     tools:context=".Fragment4">
 
+    <TextView
+        android:id="@+id/tv_hs"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="TextView"
+        android:textSize="30sp" />
+
+    <Button
+        android:id="@+id/gameStart"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="game start"
+        android:textSize="30sp" />
 </LinearLayout>

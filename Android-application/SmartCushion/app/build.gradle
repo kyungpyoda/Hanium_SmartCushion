@@ -36,6 +36,8 @@ dependencies {
     implementation 'com.github.PhilJay:MPAndroidChart:v3.0.3'
     implementation group: 'com.kakao.sdk', name: 'usermgmt', version: '1.21.1'
 
-
     implementation 'com.mcxiaoke.volley:library:1.0.19'
+
+    implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.0'
+    implementation 'org.eclipse.paho:org.eclipse.paho.android.service:1.1.1'
 }

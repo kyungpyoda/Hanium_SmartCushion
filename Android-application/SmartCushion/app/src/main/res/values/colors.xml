@@ -17,4 +17,6 @@
 
     <color name="barR">#FF0000</color>
     <color name="barB">#0000FF</color>
+    <color name="goodc">#90DA7F</color>
+    <color name="badc">#FF6B6B</color>
 </resources>

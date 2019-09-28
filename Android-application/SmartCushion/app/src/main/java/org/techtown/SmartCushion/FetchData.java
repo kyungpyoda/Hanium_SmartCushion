@@ -22,8 +22,9 @@ public class FetchData extends AsyncTask<String, Void, String> {
     @Override
     protected String doInBackground(String... strings) {
         try {
-            URL url = new URL("http://172.30.1.45:3000/data/"+strings[0]+"/"+strings[1]);
+            URL url = new URL("http://192.168.1.112:3000/data/"+strings[0]+"/"+strings[1]);
             //strings[0] is USERID and strings[1] is DATE
+            Log.d("testtest",strings[1]);
             HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
             httpURLConnection.setRequestMethod("GET");
             InputStream inputStream = httpURLConnection.getInputStream();
@@ -43,6 +44,9 @@ public class FetchData extends AsyncTask<String, Void, String> {
                 JSONObject JO = (JSONObject) JA.get(i);
             }
             */
+
+            //JSONArray JA = new JSONArray(data);
+            //JSONObject JO = (JSONObject) JA.get(0);
             JSONObject JO = new JSONObject(data);
             singleParsed = "user:"+JO.get("user")+"\n"+
                     "date:"+JO.get("date")+"\n"+

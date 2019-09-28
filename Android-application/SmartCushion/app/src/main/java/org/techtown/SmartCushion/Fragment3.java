@@ -8,6 +8,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -98,10 +99,12 @@ public class Fragment3 extends Fragment {
                 FetchData fetchData = new FetchData();
                 String temp = "";
                 try {
+                    Log.d("testtest","3p");
+
                     temp = fetchData.execute(
                             USERID,
-                            Integer.toString(DATE[0])+
-                            Integer.toString(DATE[1])+
+                            Integer.toString(DATE[0])+':'+
+                            Integer.toString(DATE[1])+':'+
                             Integer.toString(DATE[2])
                     ).get();
                     pValue = temp;
@@ -118,10 +121,11 @@ public class Fragment3 extends Fragment {
         FetchData fetchData = new FetchData();
         String temp = "";
         try {
+            Log.d("testtest","3");
             temp = fetchData.execute(
                     USERID,
-                    Integer.toString(DATE[0])+
-                            Integer.toString(DATE[1])+
+                    Integer.toString(DATE[0])+':'+
+                            Integer.toString(DATE[1])+':'+
                             Integer.toString(DATE[2])
             ).get();
             pValue = temp;
@@ -190,8 +194,8 @@ public class Fragment3 extends Fragment {
         MyBarDataSet myBarDataSet = new MyBarDataSet(barEntryArrayList, "");
         //barDataSet.setColors(ColorTemplate.COLORFUL_COLORS);
         myBarDataSet.setColors(new int[]{
-                ContextCompat.getColor(barChart.getContext(), R.color.barB),
-                ContextCompat.getColor(barChart.getContext(), R.color.barR)});
+                ContextCompat.getColor(barChart.getContext(), R.color.goodc),
+                ContextCompat.getColor(barChart.getContext(), R.color.badc)});
         myBarDataSet.setDrawValues(false); //값 표시 제거
         Description description = new Description();
         description.setText("Hours");
@@ -243,8 +247,8 @@ public class Fragment3 extends Fragment {
         myPieDataSet.setSliceSpace(3f);
         myPieDataSet.setSelectionShift(5f);
         myPieDataSet.setColors(new int[]{
-                ContextCompat.getColor(pieChart.getContext(), R.color.barB),
-                ContextCompat.getColor(pieChart.getContext(), R.color.barR)});
+                ContextCompat.getColor(pieChart.getContext(), R.color.goodc),
+                ContextCompat.getColor(pieChart.getContext(), R.color.badc)});
         PieData pieData = new PieData(myPieDataSet);
         pieData.setValueTextSize(10f);
         pieData.setValueTextColor(Color.YELLOW);
