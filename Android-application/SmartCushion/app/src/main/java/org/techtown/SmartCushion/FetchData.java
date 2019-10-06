@@ -3,6 +3,7 @@ package org.techtown.SmartCushion;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -13,16 +14,19 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 
-public class FetchData extends AsyncTask<String, Void, String> {
+public class FetchData extends AsyncTask<String, Void, ArrayList<Integer>> {
     String data = "";
     String dataParsed = "";
     String singleParsed = "";
     String filteredData = "";
+    ArrayList<Integer> testdata = new ArrayList<>();
     @Override
-    protected String doInBackground(String... strings) {
+    protected ArrayList<Integer> doInBackground(String... strings) {
         try {
-            URL url = new URL("http://192.168.1.112:3000/data/"+strings[0]+"/"+strings[1]);
+            //서버 접속. USERID, date 인자로 리퀘스트
+            URL url = new URL("http://169.56.84.167:3000/data/"+strings[0]+"/"+strings[1]);
             //strings[0] is USERID and strings[1] is DATE
             Log.d("testtest",strings[1]);
             HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
@@ -36,23 +40,31 @@ public class FetchData extends AsyncTask<String, Void, String> {
                 //data = data + line;
             }
             data = body.toString();
-            Log.d("ABC",data);
-
-            /*
-            JSONArray JA = new JSONArray(data);
-            for(int i = 0; i<JA.length(); i++){
-                JSONObject JO = (JSONObject) JA.get(i);
-            }
-            */
+            Log.e("Connect_success",data);
 
             //JSONArray JA = new JSONArray(data);
             //JSONObject JO = (JSONObject) JA.get(0);
-            JSONObject JO = new JSONObject(data);
+            /*JSONObject JO = new JSONObject(data);
             singleParsed = "user:"+JO.get("user")+"\n"+
                     "date:"+JO.get("date")+"\n"+
                     "position:"+JO.get("position")+"\n";
             dataParsed = dataParsed + singleParsed + "\n";
             filteredData = JO.get("position").toString();
+            */
+
+            /////////JSON객체를 받아서 시간대 별로 자세상태 값 파싱하여 리턴
+            JSONArray JA = new JSONArray(data);
+            JSONObject JO = (JSONObject) JA.get(0);
+            //JSONObject JO = new JSONObject(data);
+            for(int i=0;i<24;i++){
+                if(JO.has(String.valueOf(i))){
+                    testdata.add(JO.getInt(Integer.toString(i)));
+                }
+                else{
+                    testdata.add(-1);
+                }
+            }
+
 
         } catch (MalformedURLException e) {
             e.printStackTrace();
@@ -63,11 +75,12 @@ public class FetchData extends AsyncTask<String, Void, String> {
         }
 
 
-        return filteredData;
+        //return filteredData;
+        return testdata;
     }
 
     //@Override
-    protected void onPostExecute(String s) {
+    protected void onPostExecute(ArrayList<Integer> s) {
         super.onPostExecute(s);
     }
 

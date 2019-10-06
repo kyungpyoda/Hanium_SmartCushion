@@ -8,7 +8,7 @@ public class MyReceiver extends BroadcastReceiver {
     public MyReceiver(){
 
     }
-
+    ////푸시알림 설정 화면에서 푸시알림을 on 했을 때 intent를 받아서 알림 세부 설정을 위해 intent를 Broadcast
     @Override
     public void onReceive(Context context, Intent intent) {
         int nid = intent.getIntExtra("nid", 0);

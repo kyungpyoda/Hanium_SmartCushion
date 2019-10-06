@@ -20,6 +20,7 @@ public class MyNewJobIntentService extends JobIntentService {
 
     @Override
     protected void onHandleWork(@NonNull Intent intent) {
+        ////intent와 같이 전달된 nid값에 따라 다른 메시지의 푸시 알림 설정
         NOTIFICATION_ID = intent.getIntExtra("nid", 0);
         String title = "";
         String msg = "";

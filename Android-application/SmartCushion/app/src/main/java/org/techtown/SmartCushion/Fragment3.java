@@ -8,13 +8,11 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.DatePicker;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.charts.PieChart;
@@ -34,7 +32,6 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import static org.techtown.SmartCushion.MainActivity.USERID;
-
 public class Fragment3 extends Fragment {
 
     BarChart barChart;
@@ -45,7 +42,7 @@ public class Fragment3 extends Fragment {
     TextView displayDate;
     int[] DATE = new int[3];
     DatePickerDialog.OnDateSetListener dateSetListener;
-    String pValue;
+    ArrayList<Integer> pValue;
 
     @Nullable
     @Override
@@ -57,13 +54,14 @@ public class Fragment3 extends Fragment {
         return rootView;
     }
     private void initUI(final ViewGroup rootView) {
+        ////날짜를 선택하여 통계조회
         Calendar c = Calendar.getInstance();
         SimpleDateFormat mdformat = new SimpleDateFormat("yyyyMMdd");
         DATE[0]=Integer.parseInt(mdformat.format(c.getTime()).substring(0,4));
         DATE[1]=Integer.parseInt(mdformat.format(c.getTime()).substring(4,6));
         DATE[2]=Integer.parseInt(mdformat.format(c.getTime()).substring(6));
         String date = DATE[0] + "년 " + DATE[1] + "월 " + DATE[2] + "일";
-
+        ////DatePicker dialog 생성
         displayDate = rootView.findViewById(R.id.tvDate);
         displayDate.setText(date);
         displayDate.setOnClickListener(new View.OnClickListener() {
@@ -85,6 +83,7 @@ public class Fragment3 extends Fragment {
             }
 
         });
+        ////날짜를 선택하면 USERID와 선택한 날짜를 담아서 fetchData를 실행하여 http 요청
         dateSetListener = new DatePickerDialog.OnDateSetListener() {
             @Override
             public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
@@ -97,53 +96,51 @@ public class Fragment3 extends Fragment {
                 displayDate.setText(date);
 
                 FetchData fetchData = new FetchData();
-                String temp = "";
+                ////pValue는 파싱된 24개의 정수배열(0~23시)
                 try {
-                    Log.d("testtest","3p");
-
-                    temp = fetchData.execute(
+                    pValue = fetchData.execute(
                             USERID,
                             Integer.toString(DATE[0])+':'+
                             Integer.toString(DATE[1])+':'+
                             Integer.toString(DATE[2])
                     ).get();
-                    pValue = temp;
                 } catch (ExecutionException e) {
                     e.printStackTrace();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                Toast.makeText(getActivity(), temp ,Toast.LENGTH_LONG).show();
+                //Toast.makeText(getActivity(), temp ,Toast.LENGTH_LONG).show();
                 updateChart(rootView);
             }
         };
 
+        ////위의 소스와 중복되는 이유는
+        ////위의 소스는 datepicker dialog 의 날짜 선택에 따른 리스너 설정
+        ////아래 소스는 현재 통계 탭(Fragment3)을 띄우자마자 바로 그래프로 보여주기 위함
         FetchData fetchData = new FetchData();
-        String temp = "";
         try {
-            Log.d("testtest","3");
-            temp = fetchData.execute(
+            pValue = fetchData.execute(
                     USERID,
                     Integer.toString(DATE[0])+':'+
                             Integer.toString(DATE[1])+':'+
                             Integer.toString(DATE[2])
             ).get();
-            pValue = temp;
         } catch (ExecutionException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        Toast.makeText(getActivity(), temp ,Toast.LENGTH_LONG).show();
+        //Toast.makeText(getActivity(), temp ,Toast.LENGTH_LONG).show();
         updateChart(rootView);
 
     }
 
+    ////pValue에 파싱되어 있는 데이터를 그래프로 보여주기 위해 다시 변환
     private void tempData() {
         dailyStatisticsArrayList.clear();
-        for(int i = 0;i<24;i++){
+        for(int i = 0;i<pValue.size();i++){
             dailyStatisticsArrayList.add(
-                    new DailyStatistics(Integer.toString(i),(pValue.charAt(i)-'0'))
+                    new DailyStatistics(Integer.toString(i),(pValue.get(i)))
             );
         }
     }
@@ -155,10 +152,11 @@ public class Fragment3 extends Fragment {
 
         @Override
         public int getColor(int index) {
-            if(getEntryForIndex(index).getY() == 1)
-                return mColors.get(0);
+            ////그래프의 자세값이 0은 정상, 1,2,3,4는 비정상
+            if((Integer) getEntryForIndex(index).getData() == 0)
+                return mColors.get(0); ////get(0)은 초록색
             else
-                return mColors.get(1);
+                return mColors.get(1); ////get(1)은 빨간색
         }
     }
     private class MyPieDataSet extends PieDataSet {
@@ -173,9 +171,9 @@ public class Fragment3 extends Fragment {
         }
     }
 
+    ////변환해놓은 값들을 이용해서 막대그래프, 원그래프로 시각화
     private void updateChart(final ViewGroup rootView){
         barChart = rootView.findViewById(R.id.barchart);
-
 
         tempData();
         barEntryArrayList = new ArrayList<>();
@@ -186,7 +184,7 @@ public class Fragment3 extends Fragment {
         for(int i = 0; i < dailyStatisticsArrayList.size(); i++) {
             String hour = dailyStatisticsArrayList.get(i).getHour();
             int status = dailyStatisticsArrayList.get(i).getStatus();
-            barEntryArrayList.add(new BarEntry(i, status));
+            barEntryArrayList.add(new BarEntry(i, (status == -1) ? 0 : 1 , status));
 
             labelsNames.add(hour);
         }
@@ -198,7 +196,7 @@ public class Fragment3 extends Fragment {
                 ContextCompat.getColor(barChart.getContext(), R.color.badc)});
         myBarDataSet.setDrawValues(false); //값 표시 제거
         Description description = new Description();
-        description.setText("Hours");
+        description.setText("");
         barChart.setDescription(description);
         BarData barData = new BarData(myBarDataSet);
         barChart.setData(barData);
@@ -229,21 +227,23 @@ public class Fragment3 extends Fragment {
         pieChart.setDrawHoleEnabled(false);
         pieChart.setHoleColor(Color.WHITE);
         pieChart.setTransparentCircleRadius(61f);
+        pieChart.setDrawEntryLabels(false);
+        pieChart.setDrawMarkers(false);
         ArrayList<PieEntry> yValues = new ArrayList<PieEntry>();
         int pieBad = 0, pieGood = 0;
         for(DailyStatistics d : dailyStatisticsArrayList) {
-            if(d.status != 0) {
-                if(d.status == 1) pieGood++;
+            if(d.status != -1) {
+                if(d.status == 0) pieGood++;
                 else pieBad++;
             }
         }
-        yValues.add(new PieEntry(pieBad, "BAD"));
         yValues.add(new PieEntry(pieGood, "GOOD"));
+        yValues.add(new PieEntry(pieBad, "BAD"));
         Description description2 = new Description();
-        description2.setText("pie");
+        description2.setText("");
         description2.setTextSize(15);
         pieChart.setDescription(description2);
-        MyPieDataSet myPieDataSet = new MyPieDataSet(yValues, "pie");
+        MyPieDataSet myPieDataSet = new MyPieDataSet(yValues, "");
         myPieDataSet.setSliceSpace(3f);
         myPieDataSet.setSelectionShift(5f);
         myPieDataSet.setColors(new int[]{

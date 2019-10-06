@@ -36,7 +36,7 @@ public class Fragment1 extends Fragment {
     ArrayList<BarEntry> barEntryArrayList;
     ArrayList<String> labelsNames;
     ArrayList<DailyStatistics> dailyStatisticsArrayList = new ArrayList<>();
-    String pValue;
+    ArrayList<Integer> pValue = new ArrayList<>();
     int temp = 0;
 
     public static ImageView status_img;
@@ -51,6 +51,7 @@ public class Fragment1 extends Fragment {
 
         return rootView;
     }
+
     private void initUI(ViewGroup rootView) {
         status_img = rootView.findViewById(R.id.status_img);
         text_status = rootView.findViewById(R.id.text_status);
@@ -65,18 +66,6 @@ public class Fragment1 extends Fragment {
                 }
             }
         });
-        //status_img.setImageDrawable(getResources().getDrawable(R.drawable.cushion_bad));
-        //status_img.setImageDrawable(getResources().getDrawable(R.drawable.cushion_bad, getActivity().getTheme()));
-        //같은 명령어지만 api level에 맞춰서 둘 중 하나 골라서 ㄱㄱ
-        Log.e("Connect_success", "????????");
-        if(mqttAndroidClient.isConnected()) {
-            Log.e("Connect_success", "connected check");
-            try {
-                mqttAndroidClient.subscribe("now_status", 0);
-            } catch (MqttException e) {
-                e.printStackTrace();
-            }
-        }
 
         Button buttongg = rootView.findViewById(R.id.buttongg);
         buttongg.setOnClickListener(new View.OnClickListener() {
@@ -89,7 +78,7 @@ public class Fragment1 extends Fragment {
                 } catch (MqttException e) {
                     e.printStackTrace();
                 }
-                Log.e("Connect_success", Integer.toString(temp));
+                //Log.e("Connect_success", Integer.toString(temp));
             }
         });
         Button buttonbb = rootView.findViewById(R.id.buttonbb);
@@ -103,7 +92,7 @@ public class Fragment1 extends Fragment {
                 } catch (MqttException e) {
                     e.printStackTrace();
                 }
-                Log.e("Connect_success", Integer.toString(temp));
+                //Log.e("Connect_success", Integer.toString(temp));
             }
         });
         Button buttonaa = rootView.findViewById(R.id.buttonaa);
@@ -118,7 +107,6 @@ public class Fragment1 extends Fragment {
 
             }
         });
-        Log.e("Connect_success", "??");
 
         Calendar c = Calendar.getInstance();
         SimpleDateFormat mdformat = new SimpleDateFormat("yyyyMMdd");
@@ -127,23 +115,17 @@ public class Fragment1 extends Fragment {
         String day = mdformat.format(c.getTime()).substring(6);
 
         FetchData fetchData = new FetchData();
-        String temp = "";
         try {
-            Log.d("testtest","1");
-
-            temp = fetchData.execute(
+            pValue = fetchData.execute(
                     USERID,
                     year + ':' + month + ':' + day
             ).get();
-            pValue = temp;
         } catch (ExecutionException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        //Toast.makeText(getActivity(), temp ,Toast.LENGTH_LONG).show();
 
-        //
         barChart = rootView.findViewById(R.id.barchart);
 
         tempData();
@@ -155,7 +137,8 @@ public class Fragment1 extends Fragment {
         for(int i = 0; i < dailyStatisticsArrayList.size(); i++) {
             String hour = dailyStatisticsArrayList.get(i).getHour();
             int status = dailyStatisticsArrayList.get(i).getStatus();
-            barEntryArrayList.add(new BarEntry(i, status));
+            barEntryArrayList.add(new BarEntry(i, (status == -1) ? 0 : 1 , status));
+
 
             labelsNames.add(hour);
         }
@@ -167,7 +150,7 @@ public class Fragment1 extends Fragment {
                 ContextCompat.getColor(barChart.getContext(), R.color.badc)});
         myBarDataSet.setDrawValues(false); //값 표시 제거
         Description description = new Description();
-        description.setText("Hours");
+        description.setText("");
         barChart.setDescription(description);
         BarData barData = new BarData(myBarDataSet);
         barChart.setData(barData);
@@ -198,7 +181,7 @@ public class Fragment1 extends Fragment {
 
         @Override
         public int getColor(int index) {
-            if(getEntryForIndex(index).getY() == 1)
+            if((Integer) getEntryForIndex(index).getData() == 0)
                 return mColors.get(0);
             else
                 return mColors.get(1);
@@ -206,9 +189,9 @@ public class Fragment1 extends Fragment {
     }
     private void tempData() {
         dailyStatisticsArrayList.clear();
-        for(int i = 0;i<24;i++){
+        for(int i = 0;i<pValue.size();i++){
             dailyStatisticsArrayList.add(
-                    new DailyStatistics(Integer.toString(i),(pValue.charAt(i)-'0'))
+                    new DailyStatistics(Integer.toString(i),(pValue.get(i)))
             );
         }
     }

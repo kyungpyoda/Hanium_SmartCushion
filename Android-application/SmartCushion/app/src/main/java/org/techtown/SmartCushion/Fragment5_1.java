@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import static org.techtown.SmartCushion.MainActivity.mqttAndroidClient;
 
 public class Fragment5_1 extends Fragment {
-    Fragment5 fragment5;
     ArrayList<TextView> ps;
     @Nullable
     @Override
@@ -124,7 +123,7 @@ public class Fragment5_1 extends Fragment {
                     temp++;
                     ps.get(i).setText(Integer.toString(temp));
                     ps.get(i).setBackgroundColor(Color.rgb(255,255-temp,255-temp));
-                }
+                 }
                 */
                 try {
                     mqttAndroidClient.publish("cushion","9".getBytes(),0,false);
@@ -142,11 +141,7 @@ public class Fragment5_1 extends Fragment {
         });
     }
     private void completeSetting() {
-        fragment5 = new Fragment5();
-        getFragmentManager()
-                .beginTransaction()
-                .replace(R.id.container, fragment5)
-                .commit();
+        getFragmentManager().popBackStackImmediate();
     }
 
     @Override

@@ -1,10 +1,14 @@
 package org.techtown.SmartCushion;
 
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.Signature;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Base64;
 import android.util.Log;
 import android.view.MenuItem;
 import android.widget.Toast;
@@ -20,13 +24,14 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 
 import static org.techtown.SmartCushion.Fragment1.status_img;
 import static org.techtown.SmartCushion.Fragment1.text_status;
 
 public class MainActivity extends AppCompatActivity {
-
     Fragment1 fragment1;
     Fragment2 fragment2;
     Fragment3 fragment3;
@@ -34,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
     Fragment5 fragment5;
     static String USERID;
     static String USERNAME;
+    public static boolean inGame;
 
     public static MqttAndroidClient mqttAndroidClient;
 
@@ -41,10 +47,24 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        MqttConnecting();
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        try {
+            PackageInfo info = getPackageManager().getPackageInfo(
+                    getPackageName(), PackageManager.GET_SIGNATURES);
+            for (Signature signature : info.signatures) {
+                MessageDigest md = MessageDigest.getInstance("SHA");
+                md.update(signature.toByteArray());
+                Log.e("MY KEY HASH:",
+                        Base64.encodeToString(md.digest(), Base64.DEFAULT));
+            }
+        } catch (PackageManager.NameNotFoundException e) {
 
-        MqttConnecting();
+        } catch (NoSuchAlgorithmException e) {
+
+        }
 
         Log.d("TEST", "mainoncreate");
         fragment1 = new Fragment1();
@@ -53,8 +73,9 @@ public class MainActivity extends AppCompatActivity {
         fragment4 = new Fragment4();
         fragment5 = new Fragment5();
 
-        getSupportFragmentManager().beginTransaction().replace(R.id.container, fragment1).commit();
+        inGame = false;
 
+        getSupportFragmentManager().beginTransaction().replace(R.id.container, fragment1).commit();
 
 
         bottomNavigation = findViewById(R.id.bottom_navigation);
@@ -142,11 +163,13 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onSuccess(IMqttToken asyncActionToken) {
                     mqttAndroidClient.setBufferOpts(getDisconnectedBufferOptions());    //연결에 성공한경우
+                    mqttCallbackSetting();
                     Log.e("Connect_success", "Success");
 
                     //로그인 하자마자 바로 페어링 시도
                     try {
                         mqttAndroidClient.subscribe("accepted", 0);
+                        mqttAndroidClient.subscribe("cushion",0);
                     } catch (MqttException e) {
                         e.printStackTrace();
                     }
@@ -157,6 +180,7 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     text_status.setText("자세 정보 없음");
+
                 }
 
                 @Override
@@ -170,7 +194,7 @@ public class MainActivity extends AppCompatActivity {
         {
             e.printStackTrace();
         }
-        mqttCallbackSetting();
+
     }
     public void mqttCallbackSetting() {
         mqttAndroidClient.setCallback(new MqttCallback() {  //클라이언트의 콜백을 처리하는부분
@@ -183,17 +207,19 @@ public class MainActivity extends AppCompatActivity {
             public void messageArrived(String topic, MqttMessage message) throws Exception {    //모든 메시지가 올때 Callback method
                 Log.e("Connect_success", "messageArrived : "+message);
                 String msg = new String(message.getPayload());
-                //t = Integer.parseInt(msg);
-                //msg.replaceAll("(\r\n|\r|\n|\n\r)","");
 
                 for(int i=0;i<msg.length();i++){
                     Log.e("Connect_success", String.valueOf(msg.charAt(i)));
                 }
-                msg=msg.substring(0,msg.length()-1);
+                //msg=msg.substring(0,msg.length()-1);
                 Log.e("Connect_success", msg+", length : "+msg.length());
 
                 switch (topic) {
                     case "cushion":
+                        if(inGame) {
+                            Fragment4_1.carMove(Integer.parseInt(msg));
+                            break;
+                        }
                         if(msg.equals("0")) {
                             Log.e("AM", msg);
                             text_status.setText("정 상");
