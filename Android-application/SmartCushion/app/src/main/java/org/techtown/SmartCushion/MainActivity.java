@@ -137,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
         Log.d("TEST",ss.get(2));
         USERID = ss.get(0);
         USERNAME = ss.get(1);
-
+        Toast.makeText(this, USERNAME+"님 안녕하세요.", Toast.LENGTH_SHORT).show();
 
     }
 
@@ -211,7 +211,7 @@ public class MainActivity extends AppCompatActivity {
                 for(int i=0;i<msg.length();i++){
                     Log.e("Connect_success", String.valueOf(msg.charAt(i)));
                 }
-                //msg=msg.substring(0,msg.length()-1);
+                msg=msg.substring(0,msg.length()-1);
                 Log.e("Connect_success", msg+", length : "+msg.length());
 
                 switch (topic) {

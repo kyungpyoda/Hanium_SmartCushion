@@ -118,7 +118,7 @@ public class Fragment4_1 extends Fragment {
             //myPaint.setColor(Color.RED);
             //canvas.drawRect((myCarPosition * viewWidth / 40), viewHeight - 2 - carHeight, (myCarPosition * viewWidth / 40) + carWidth, viewHeight - 2, myPaint);
             Drawable d;
-            d = getResources().getDrawable(R.drawable.cushion_good);
+            d = getResources().getDrawable(R.drawable.car1);
             d.setBounds((myCarPosition * viewWidth / 40), viewHeight - 2 - carHeight, (myCarPosition * viewWidth / 40) + carWidth, viewHeight - 2);
             d.draw(canvas);
 
@@ -128,7 +128,7 @@ public class Fragment4_1 extends Fragment {
                 int carY = time - (int) otherCars.get(i).get("startTime");
                 int temp = (int)otherCars.get(i).get("lane");
                 //canvas.drawRect(carX, carY - carHeight, carX + carWidth, carY, myPaint);
-                d = getResources().getDrawable(R.drawable.cushion_bad);
+                d = getResources().getDrawable(R.drawable.car2);
                 d.setBounds(carX, carY - carHeight, carX + carWidth, carY);
                 d.draw(canvas);
                 if(carY > viewHeight-carHeight && carY - carHeight < viewHeight) {

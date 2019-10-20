@@ -12,9 +12,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.DatePicker;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.github.mikephil.charting.charts.BarChart;
+import com.github.mikephil.charting.charts.Chart;
 import com.github.mikephil.charting.charts.PieChart;
 import com.github.mikephil.charting.components.Description;
 import com.github.mikephil.charting.components.XAxis;
@@ -43,6 +45,8 @@ public class Fragment3 extends Fragment {
     int[] DATE = new int[3];
     DatePickerDialog.OnDateSetListener dateSetListener;
     ArrayList<Integer> pValue;
+    LinearLayout layoutForNull2;
+    LinearLayout layoutForNull3;
 
     @Nullable
     @Override
@@ -63,7 +67,7 @@ public class Fragment3 extends Fragment {
         String date = DATE[0] + "년 " + DATE[1] + "월 " + DATE[2] + "일";
         ////DatePicker dialog 생성
         displayDate = rootView.findViewById(R.id.tvDate);
-        displayDate.setText(date);
+        displayDate.setText(" "+date+" ");
         displayDate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -93,7 +97,7 @@ public class Fragment3 extends Fragment {
                 DATE[1]=month;
                 DATE[2]=dayOfMonth;
 
-                displayDate.setText(date);
+                displayDate.setText(" "+date+" ");
 
                 FetchData fetchData = new FetchData();
                 ////pValue는 파싱된 24개의 정수배열(0~23시)
@@ -130,9 +134,14 @@ public class Fragment3 extends Fragment {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        //Toast.makeText(getActivity(), temp ,Toast.LENGTH_LONG).show();
-        updateChart(rootView);
 
+        barChart = rootView.findViewById(R.id.barchart);
+        pieChart = rootView.findViewById(R.id.piechart);
+        layoutForNull2 = (LinearLayout)rootView.findViewById(R.id.layoutForNull2);
+        layoutForNull3 = (LinearLayout)rootView.findViewById(R.id.layoutForNull3);
+
+
+        updateChart(rootView);
     }
 
     ////pValue에 파싱되어 있는 데이터를 그래프로 보여주기 위해 다시 변환
@@ -173,7 +182,18 @@ public class Fragment3 extends Fragment {
 
     ////변환해놓은 값들을 이용해서 막대그래프, 원그래프로 시각화
     private void updateChart(final ViewGroup rootView){
-        barChart = rootView.findViewById(R.id.barchart);
+        //barChart = rootView.findViewById(R.id.barchart);
+        if (pValue.isEmpty()) {
+            layoutForNull2.setVisibility(View.VISIBLE);
+            layoutForNull3.setVisibility(View.VISIBLE);
+            barChart.setNoDataText("");
+            pieChart.setNoDataText("");
+            barChart.invalidate();
+            pieChart.invalidate();
+            return;
+        }
+        layoutForNull2.setVisibility(View.INVISIBLE);
+        layoutForNull3.setVisibility(View.INVISIBLE);
 
         tempData();
         barEntryArrayList = new ArrayList<>();
@@ -217,9 +237,13 @@ public class Fragment3 extends Fragment {
         barChart.getAxisRight().setDrawZeroLine(true);
         barChart.setDrawMarkers(false);
         barChart.setDrawBorders(false);
+
+        barChart.setNoDataText("표시할 데이터가 없습니다.");
+        barChart.getPaint(Chart.PAINT_INFO).setTextSize(40f);
+
         barChart.invalidate();
 
-        pieChart = rootView.findViewById(R.id.piechart);
+        //pieChart = rootView.findViewById(R.id.piechart);
         pieChart.setUsePercentValues(true);
         pieChart.getDescription().setEnabled(false);
         pieChart.setExtraOffsets(5,10,5,5);
@@ -253,6 +277,8 @@ public class Fragment3 extends Fragment {
         pieData.setValueTextSize(10f);
         pieData.setValueTextColor(Color.YELLOW);
         pieChart.setData(pieData);
+        pieChart.setNoDataText("표시할 데이터가 없습니다.");
+        pieChart.getPaint(Chart.PAINT_INFO).setTextSize(40f);
         pieChart.invalidate();
     }
 }

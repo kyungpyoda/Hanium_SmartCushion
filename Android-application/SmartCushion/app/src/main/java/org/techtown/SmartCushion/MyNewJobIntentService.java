@@ -47,4 +47,5 @@ public class MyNewJobIntentService extends JobIntentService {
         NotificationManagerCompat managerCompat = NotificationManagerCompat.from(this);
         managerCompat.notify(NOTIFICATION_ID, notificationCompat);
     }
+
 }

@@ -136,8 +136,8 @@ public class Fragment5 extends Fragment {
                             (getActivity(), 1, notifyIntent, PendingIntent.FLAG_UPDATE_CURRENT);
                     AlarmManager alarmManager = (AlarmManager) getActivity().getSystemService(Context.ALARM_SERVICE);
                     ////triggertime은 오후 1시 10분 전, 주기는 24시간
-                    alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP, 1000*60*60*13-1000*60*10,
-                            1000*60*60*24, pendingIntent);
+                    alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis()+5000,
+                            1000*60, pendingIntent);
                     Toast.makeText(getActivity(), "점심시간 스트레칭 알림 ON", Toast.LENGTH_SHORT).show();
                 }
                 else {

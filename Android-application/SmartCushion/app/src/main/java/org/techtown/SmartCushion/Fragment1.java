@@ -11,9 +11,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.github.mikephil.charting.charts.BarChart;
+import com.github.mikephil.charting.charts.Chart;
 import com.github.mikephil.charting.components.Description;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.data.BarData;
@@ -126,53 +128,60 @@ public class Fragment1 extends Fragment {
             e.printStackTrace();
         }
 
+        LinearLayout layoutForNull = (LinearLayout)rootView.findViewById(R.id.layoutForNull1);
         barChart = rootView.findViewById(R.id.barchart);
-
-        tempData();
-        barEntryArrayList = new ArrayList<>();
-        labelsNames = new ArrayList<>();
-        barEntryArrayList.clear();
-        labelsNames.clear();
-
-        for(int i = 0; i < dailyStatisticsArrayList.size(); i++) {
-            String hour = dailyStatisticsArrayList.get(i).getHour();
-            int status = dailyStatisticsArrayList.get(i).getStatus();
-            barEntryArrayList.add(new BarEntry(i, (status == -1) ? 0 : 1 , status));
-
-
-            labelsNames.add(hour);
+        if (pValue.isEmpty()) {
+            layoutForNull.setVisibility(View.VISIBLE);
+            barChart.setNoDataText("");
+            barChart.invalidate();
         }
-        //BarDataSet barDataSet = new BarDataSet(barEntryArrayList, "Daily statistics");
-        MyBarDataSet myBarDataSet = new MyBarDataSet(barEntryArrayList, "");
-        //barDataSet.setColors(ColorTemplate.COLORFUL_COLORS);
-        myBarDataSet.setColors(new int[]{
-                ContextCompat.getColor(barChart.getContext(), R.color.goodc),
-                ContextCompat.getColor(barChart.getContext(), R.color.badc)});
-        myBarDataSet.setDrawValues(false); //값 표시 제거
-        Description description = new Description();
-        description.setText("");
-        barChart.setDescription(description);
-        BarData barData = new BarData(myBarDataSet);
-        barChart.setData(barData);
-        XAxis xAxis = barChart.getXAxis();
-        //xAxis.setValueFormatter(new IndexAxisValueFormatter(labelsNames));
-        //xAxis.setPosition(XAxis.XAxisPosition.TOP);
-        xAxis.setDrawGridLines(false);
-        xAxis.setDrawAxisLine(false);
-        xAxis.setGranularity(1f);
-        xAxis.setLabelCount(labelsNames.size());
-        barChart.getAxisLeft().setAxisMaximum(1f);
-        barChart.getAxisRight().setAxisMaximum(1f);
-        barChart.getAxisLeft().setDrawGridLines(false);
-        barChart.getAxisRight().setDrawGridLines(false);
-        barChart.getAxisLeft().setDrawLabels(false);
-        barChart.getAxisRight().setDrawLabels(false);
-        barChart.getAxisLeft().setDrawZeroLine(true);
-        barChart.getAxisRight().setDrawZeroLine(true);
-        barChart.setDrawMarkers(false);
-        barChart.setDrawBorders(false);
-        barChart.invalidate();
+        else {
+            tempData();
+            barEntryArrayList = new ArrayList<>();
+            labelsNames = new ArrayList<>();
+            barEntryArrayList.clear();
+            labelsNames.clear();
 
+            for(int i = 0; i < dailyStatisticsArrayList.size(); i++) {
+                String hour = dailyStatisticsArrayList.get(i).getHour();
+                int status = dailyStatisticsArrayList.get(i).getStatus();
+                barEntryArrayList.add(new BarEntry(i, (status == -1) ? 0 : 1 , status));
+
+                labelsNames.add(hour);
+            }
+            //BarDataSet barDataSet = new BarDataSet(barEntryArrayList, "Daily statistics");
+            MyBarDataSet myBarDataSet = new MyBarDataSet(barEntryArrayList, "");
+            //barDataSet.setColors(ColorTemplate.COLORFUL_COLORS);
+            myBarDataSet.setColors(new int[]{
+                    ContextCompat.getColor(barChart.getContext(), R.color.goodc),
+                    ContextCompat.getColor(barChart.getContext(), R.color.badc)});
+            myBarDataSet.setDrawValues(false); //값 표시 제거
+            Description description = new Description();
+            description.setText("");
+            barChart.setDescription(description);
+            BarData barData = new BarData(myBarDataSet);
+            barChart.setData(barData);
+            XAxis xAxis = barChart.getXAxis();
+            //xAxis.setValueFormatter(new IndexAxisValueFormatter(labelsNames));
+            //xAxis.setPosition(XAxis.XAxisPosition.TOP);
+            xAxis.setDrawGridLines(false);
+            xAxis.setDrawAxisLine(false);
+            xAxis.setGranularity(1f);
+            xAxis.setLabelCount(labelsNames.size());
+            barChart.getAxisLeft().setAxisMaximum(1f);
+            barChart.getAxisRight().setAxisMaximum(1f);
+            barChart.getAxisLeft().setDrawGridLines(false);
+            barChart.getAxisRight().setDrawGridLines(false);
+            barChart.getAxisLeft().setDrawLabels(false);
+            barChart.getAxisRight().setDrawLabels(false);
+            barChart.getAxisLeft().setDrawZeroLine(true);
+            barChart.getAxisRight().setDrawZeroLine(true);
+            barChart.setDrawMarkers(false);
+            barChart.setDrawBorders(false);
+            barChart.setNoDataText("표시할 데이터가 없습니다.");
+            barChart.getPaint(Chart.PAINT_INFO).setTextSize(40f);
+            barChart.invalidate();
+        }
     }
     private class MyBarDataSet extends BarDataSet {
         public MyBarDataSet(List<BarEntry> yVals, String label) {

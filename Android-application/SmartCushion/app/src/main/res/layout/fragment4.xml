@@ -2,31 +2,73 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_marginLeft="30dp"
+    android:layout_marginRight="30dp"
+    android:orientation="vertical"
     tools:context=".Fragment4">
 
     <ImageView
         android:id="@+id/imageView"
         android:layout_width="match_parent"
-        android:layout_height="300dp"
-        android:src="@drawable/gamemain"
+        android:layout_height="250dp"
+        android:contentDescription="Fail to load image"
         android:scaleType="fitCenter"
-        android:contentDescription="Fail to load image" />
+        android:src="@drawable/gamemain" />
 
-    <TextView
-        android:id="@+id/tv_hs"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="TextView"
-        android:textSize="30sp" />
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:weightSum="7">
 
-    <Button
-        android:id="@+id/gameStart"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="게임 시작"
-        android:textSize="30sp" />
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="4"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_hs"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:text="TextView"
+                android:textSize="30sp" />
+
+            <Button
+                android:id="@+id/gameStart"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text=" 게임 시작 "
+                android:textSize="30sp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="3"
+            android:orientation="vertical">
+
+            <ImageView
+                android:id="@+id/imgv1"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_gravity="right"
+                android:src="@drawable/gamemain3" />
+
+            <ImageView
+                android:id="@+id/imgv2"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_gravity="right"
+                android:src="@drawable/gamemain2" />
+        </LinearLayout>
+
+    </LinearLayout>
+
 </LinearLayout>

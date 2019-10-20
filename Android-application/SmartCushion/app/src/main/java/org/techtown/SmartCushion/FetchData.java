@@ -40,7 +40,10 @@ public class FetchData extends AsyncTask<String, Void, ArrayList<Integer>> {
                 //data = data + line;
             }
             data = body.toString();
-            Log.e("Connect_success",data);
+            if (data.length() == 2) {
+                Log.e("Connect_success", "Null Data Fetched");
+                return null;
+            }
 
             //JSONArray JA = new JSONArray(data);
             //JSONObject JO = (JSONObject) JA.get(0);
@@ -55,6 +58,7 @@ public class FetchData extends AsyncTask<String, Void, ArrayList<Integer>> {
             /////////JSON객체를 받아서 시간대 별로 자세상태 값 파싱하여 리턴
             JSONArray JA = new JSONArray(data);
             JSONObject JO = (JSONObject) JA.get(0);
+
             //JSONObject JO = new JSONObject(data);
             for(int i=0;i<24;i++){
                 if(JO.has(String.valueOf(i))){
