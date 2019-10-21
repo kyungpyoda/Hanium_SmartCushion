@@ -8,6 +8,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -110,8 +111,11 @@ public class Fragment3 extends Fragment {
                     ).get();
                 } catch (ExecutionException e) {
                     e.printStackTrace();
+                    Log.e("Connect_success","er1");
                 } catch (InterruptedException e) {
                     e.printStackTrace();
+                    Log.e("Connect_success","er2");
+
                 }
                 //Toast.makeText(getActivity(), temp ,Toast.LENGTH_LONG).show();
                 updateChart(rootView);
@@ -133,6 +137,7 @@ public class Fragment3 extends Fragment {
             e.printStackTrace();
         } catch (InterruptedException e) {
             e.printStackTrace();
+
         }
 
         barChart = rootView.findViewById(R.id.barchart);
@@ -183,7 +188,7 @@ public class Fragment3 extends Fragment {
     ////변환해놓은 값들을 이용해서 막대그래프, 원그래프로 시각화
     private void updateChart(final ViewGroup rootView){
         //barChart = rootView.findViewById(R.id.barchart);
-        if (pValue.isEmpty()) {
+        if (pValue == null || pValue.isEmpty()) {
             layoutForNull2.setVisibility(View.VISIBLE);
             layoutForNull3.setVisibility(View.VISIBLE);
             barChart.setNoDataText("");

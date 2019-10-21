@@ -126,11 +126,12 @@ public class Fragment1 extends Fragment {
             e.printStackTrace();
         } catch (InterruptedException e) {
             e.printStackTrace();
+
         }
 
         LinearLayout layoutForNull = (LinearLayout)rootView.findViewById(R.id.layoutForNull1);
         barChart = rootView.findViewById(R.id.barchart);
-        if (pValue.isEmpty()) {
+        if (pValue == null || pValue.isEmpty()) {
             layoutForNull.setVisibility(View.VISIBLE);
             barChart.setNoDataText("");
             barChart.invalidate();

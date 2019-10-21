@@ -186,15 +186,15 @@ public class Fragment4_1 extends Fragment {
         }
 
         public void carMove(int lr) {
-            if (lr == 1) {
+            if (lr == 2) {
                 if (myCarPosition > 0) {
-                    myCarPosition--;
+                    myCarPosition-=10;
                     Log.e("Connect_success", String.valueOf(myCarPosition));
                 }
             }
-            if (lr == 2) {
+            if (lr == 1) {
                 if (myCarPosition < 30) {
-                    myCarPosition++;
+                    myCarPosition+=10;
                     Log.e("Connect_success", String.valueOf(myCarPosition));
                 }
             }

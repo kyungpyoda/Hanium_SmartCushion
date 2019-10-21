@@ -44,7 +44,7 @@ public class FetchData extends AsyncTask<String, Void, ArrayList<Integer>> {
                 Log.e("Connect_success", "Null Data Fetched");
                 return null;
             }
-
+            Log.e("Connect_success",data);
             //JSONArray JA = new JSONArray(data);
             //JSONObject JO = (JSONObject) JA.get(0);
             /*JSONObject JO = new JSONObject(data);
@@ -80,6 +80,7 @@ public class FetchData extends AsyncTask<String, Void, ArrayList<Integer>> {
 
 
         //return filteredData;
+        Log.e("Connect_success","- FetchData Success -");
         return testdata;
     }
 
