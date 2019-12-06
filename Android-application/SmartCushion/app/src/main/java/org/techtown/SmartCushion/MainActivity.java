@@ -211,7 +211,7 @@ public class MainActivity extends AppCompatActivity {
                 for(int i=0;i<msg.length();i++){
                     Log.e("Connect_success", String.valueOf(msg.charAt(i)));
                 }
-                msg=msg.substring(0,msg.length()-1);
+                //msg=msg.substring(0,msg.length()-1);
                 Log.e("Connect_success", msg+", length : "+msg.length());
 
                 switch (topic) {

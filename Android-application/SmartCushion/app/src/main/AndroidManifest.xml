@@ -8,6 +8,7 @@
     <!-- TODO: Downsize button image And Replace largeHeap True with False-->
 
     <application
+        android:usesCleartextTraffic="true"
         android:largeHeap="true"
         android:name="org.techtown.SmartCushion.GlobalApplication"
         android:allowBackup="true"

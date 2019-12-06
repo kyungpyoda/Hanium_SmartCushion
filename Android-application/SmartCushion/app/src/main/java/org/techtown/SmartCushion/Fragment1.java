@@ -66,6 +66,11 @@ public class Fragment1 extends Fragment {
                 else{
                     Log.e("Connect_success", "is connected");
                 }
+                try {
+                    mqttAndroidClient.publish("cushion","1".getBytes(),0,false);
+                } catch (MqttException e) {
+                    e.printStackTrace();
+                }
             }
         });
 

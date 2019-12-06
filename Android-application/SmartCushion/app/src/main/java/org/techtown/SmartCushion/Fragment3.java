@@ -48,6 +48,7 @@ public class Fragment3 extends Fragment {
     ArrayList<Integer> pValue;
     LinearLayout layoutForNull2;
     LinearLayout layoutForNull3;
+    TextView doctor_message;
 
     @Nullable
     @Override
@@ -144,6 +145,7 @@ public class Fragment3 extends Fragment {
         pieChart = rootView.findViewById(R.id.piechart);
         layoutForNull2 = (LinearLayout)rootView.findViewById(R.id.layoutForNull2);
         layoutForNull3 = (LinearLayout)rootView.findViewById(R.id.layoutForNull3);
+        doctor_message = rootView.findViewById(R.id.message_body);
 
 
         updateChart(rootView);
@@ -152,7 +154,8 @@ public class Fragment3 extends Fragment {
     ////pValue에 파싱되어 있는 데이터를 그래프로 보여주기 위해 다시 변환
     private void tempData() {
         dailyStatisticsArrayList.clear();
-        for(int i = 0;i<pValue.size();i++){
+        int temp = (pValue == null) ? 0 : pValue.size();
+        for(int i = 0;i<temp;i++){
             dailyStatisticsArrayList.add(
                     new DailyStatistics(Integer.toString(i),(pValue.get(i)))
             );
@@ -191,14 +194,18 @@ public class Fragment3 extends Fragment {
         if (pValue == null || pValue.isEmpty()) {
             layoutForNull2.setVisibility(View.VISIBLE);
             layoutForNull3.setVisibility(View.VISIBLE);
-            barChart.setNoDataText("");
-            pieChart.setNoDataText("");
-            barChart.invalidate();
-            pieChart.invalidate();
-            return;
+            barChart.setNoDataText("asd");
+            pieChart.setNoDataText("asd");
+            //barChart.invalidate();
+            //pieChart.invalidate();
+
+            //return;
         }
-        layoutForNull2.setVisibility(View.INVISIBLE);
-        layoutForNull3.setVisibility(View.INVISIBLE);
+        else {
+            layoutForNull2.setVisibility(View.INVISIBLE);
+            layoutForNull3.setVisibility(View.INVISIBLE);
+        }
+
 
         tempData();
         barEntryArrayList = new ArrayList<>();
@@ -242,6 +249,9 @@ public class Fragment3 extends Fragment {
         barChart.getAxisRight().setDrawZeroLine(true);
         barChart.setDrawMarkers(false);
         barChart.setDrawBorders(false);
+        barChart.getLegend().setEnabled(false);
+        barChart.getAxisRight().setDrawAxisLine(false); //양쪽 테두리 제거
+        barChart.getAxisLeft().setDrawAxisLine(false);
 
         barChart.setNoDataText("표시할 데이터가 없습니다.");
         barChart.getPaint(Chart.PAINT_INFO).setTextSize(40f);
@@ -279,11 +289,30 @@ public class Fragment3 extends Fragment {
                 ContextCompat.getColor(pieChart.getContext(), R.color.goodc),
                 ContextCompat.getColor(pieChart.getContext(), R.color.badc)});
         PieData pieData = new PieData(myPieDataSet);
-        pieData.setValueTextSize(10f);
-        pieData.setValueTextColor(Color.YELLOW);
+        pieData.setValueTextSize(30f);
+        pieData.setValueTextColor(Color.WHITE);
         pieChart.setData(pieData);
+        pieChart.getLegend().setEnabled(false); //라벨 없애기
         pieChart.setNoDataText("표시할 데이터가 없습니다.");
         pieChart.getPaint(Chart.PAINT_INFO).setTextSize(40f);
         pieChart.invalidate();
+
+        if(pieBad != 0 || pieGood != 0){
+            float score = (float) pieGood / (pieGood+pieBad) * 100;
+            Log.e("Connect_success", "score : "+score);
+            if(score >= 80) {
+                doctor_message.setText("양호합니다.");
+            }
+            else if(score >= 50) {
+                doctor_message.setText("좀 더 자세에 신경써야 합니다.");
+            }
+            else if (score < 50) {
+                doctor_message.setText("위험한 정도입니다.");
+            }
+            else {
+                doctor_message.setText("invalid");
+            }
+        }
+
     }
 }
